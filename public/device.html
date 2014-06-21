@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"/>
+  <title>Remote Monitor System (Device)</title>
+  <link rel="stylesheet" href="stylesheets/style.css"/>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>
+  <script src="javascripts/peer.js"></script>
+  <script src="javascripts/remote-monitor.js"></script>
+  <script>
+    $(function() {
+      var rm = new ns.RemoteMonitor();
+
+      function peerIDsetting(id) {
+        $('#device-id').text(id);
+      }
+      function allhide() {
+        $('#initialize').hide();
+        $('#peerid-container').hide();
+        $('#monitor-video').hide();
+        $('#device-video').hide();
+      }
+      function initializing() {
+        allhide();
+        $('#initialize').show();
+      }
+      function waiting() {
+        allhide();
+        $('#peerid-container').show();
+      }
+      function connecting() {
+        allhide();
+        $('#device-video').show();
+      }
+
+      rm.onOpen(peerIDsetting);
+      rm.onError(waiting);
+      rm.onCall($('#monitor-video'), connecting, waiting);
+
+      rm.initialize($('#device-video'), initializing, waiting);
+    });
+  </script>
+</head>
+<body>
+  <div id="initialize" class="text">
+    <p>ビデオカメラとマイクを使います<br/>許可をクリックしてください</p>
+  </div>
+  <div id="peerid-container" class="text">
+    <p>peerjsID:<br/><span id="device-id">...</span></p>
+  </div>
+  <div id="video-container" class="center">
+    <video id="monitor-video" autoplay></video>
+    <video id="device-video" class="center" muted="true" autoplay></video>
+  </div>
+</body>
+</html>

@@ -81,6 +81,9 @@ ns = do ->
           conn.send 'mic-off'
         else
           conn.send 'mic-on'
+
+    terminate: ->
+      @peer.destroy()
   
     __connect: (call, video, waiting) ->
       console.log "__connect"

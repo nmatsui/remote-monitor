@@ -121,6 +121,10 @@ ns = (function() {
       })(this));
     };
 
+    RemoteMonitor.prototype.terminate = function() {
+      return this.peer.destroy();
+    };
+
     RemoteMonitor.prototype.__connect = function(call, video, waiting) {
       console.log("__connect");
       if (this.ec != null) {

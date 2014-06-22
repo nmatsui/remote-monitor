@@ -2,18 +2,13 @@
   display: block;
   margin:0 auto;
 }
-@media screen and (min-width: 981px) {
-  video {
-    width:800px;
-  }
+video {
+  margin:0px;
+  padding:0px;
 }
 @media screen and (max-width: 980px) {
   body {
     margin:0px;
-    padding:0px;
-  }
-  video {
-    width:640px;
     padding:0px;
   }
   div.text {

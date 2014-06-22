@@ -34,6 +34,9 @@
         $('#device-video').width($('html').prop('clientWidth'));
         $('#device-video').show();
       }
+      function showError(errmessage) {
+        alert(errmessage);
+      }
 
       $('#terminate').click(function() {
         rm.terminate();
@@ -41,7 +44,7 @@
       });
 
       rm.onOpen(peerIDsetting);
-      rm.onError(waiting);
+      rm.onError(showError, waiting);
       rm.onCall($('#monitor-video'), connecting, waiting);
 
       rm.initialize($('#device-video'), initializing, waiting);

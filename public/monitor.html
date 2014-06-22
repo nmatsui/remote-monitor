@@ -33,6 +33,9 @@
         $('#device-video').width($('html').prop('clientWidth'));
         $('#device-video').show();
       }
+      function showError(errmessage) {
+        alert(errmessage);
+      }
 
       $('#make-call').click(function() {
         rm.makeCall($('#callto-id').val(), $('#device-video'), connecting, waiting);
@@ -60,7 +63,7 @@
         window.open('about:blank', '_self').close();
       });
 
-      rm.onError(waiting);
+      rm.onError(showError, waiting);
 
       rm.initialize($('#monitor-video'), initializing, waiting);
     });

@@ -32,10 +32,11 @@ ns = do ->
         console.log "peer.open"
         peerIDsetting(@peer.id)
   
-    onError: (waiting) ->
+    onError: (showError, waiting) ->
       console.log "onError"
       @peer.on 'error', (err) =>
         console.log "peer.error: #{err.message}"
+        showError(err.message)
         waiting()
   
     onCall: (video, connecting, waiting) ->

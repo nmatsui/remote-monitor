@@ -50,11 +50,12 @@ ns = (function() {
       })(this));
     };
 
-    RemoteMonitor.prototype.onError = function(waiting) {
+    RemoteMonitor.prototype.onError = function(showError, waiting) {
       console.log("onError");
       return this.peer.on('error', (function(_this) {
         return function(err) {
           console.log("peer.error: " + err.message);
+          showError(err.message);
           return waiting();
         };
       })(this));

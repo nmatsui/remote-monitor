@@ -29,6 +29,8 @@
       }
       function connecting() {
         allhide();
+        $('#device-video').height($('html').prop('clientHeight'));
+        $('#device-video').width($('html').prop('clientWidth'));
         $('#device-video').show();
       }
 
@@ -53,6 +55,11 @@
         }
       });
 
+      $('#terminate').click(function() {
+        rm.terminate();
+        window.open('about:blank', '_self').close();
+      });
+
       rm.onError(waiting);
 
       rm.initialize($('#monitor-video'), initializing, waiting);
@@ -68,6 +75,8 @@
       <p>デバイスのpeerjsIDを入力し、CALLしてください</p>
       <input type="text" placeholder="peerjsID" id="callto-id"/>
       <button id="make-call">CALL</button>
+      <br/>
+      <button id="terminate">TERMINATE</button>
     </div>
     <div id="end-call-form">
       <button id="end-call">END CALL</button>

@@ -30,8 +30,15 @@
       }
       function connecting() {
         allhide();
+        $('#device-video').height($('html').prop('clientHeight'));
+        $('#device-video').width($('html').prop('clientWidth'));
         $('#device-video').show();
       }
+
+      $('#terminate').click(function() {
+        rm.terminate();
+        window.open('about:blank', '_self').close();
+      });
 
       rm.onOpen(peerIDsetting);
       rm.onError(waiting);
@@ -47,6 +54,7 @@
   </div>
   <div id="peerid-container" class="text">
     <p>peerjsID:<br/><span id="device-id">...</span></p>
+    <button id="terminate"><span class="text">TERMINATE</span></button>
   </div>
   <div id="video-container" class="center">
     <video id="monitor-video" autoplay></video>

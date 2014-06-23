@@ -13,6 +13,8 @@ I was tested on the following devices:
 * Google Chrome for Android 35.0.1916.141 / Android 4.2.2 / HTL22
 * Google Chrome for Android 35.0.1916.141 / Android 4.0.4 / Vuzix M100
 
+Unfortunately, you cannot use "Google Play" on Vuzix M100. So you have to install Google Chrome using `adb install`. (The VenderID of Vuzix M100 is "0x1bae".)
+
 License
 -------
 Copyright(C) 2014 Nobuyuki Matsui (nobuyuki.matsui@gmail.com)

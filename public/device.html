@@ -45,6 +45,7 @@
 
       rm.onOpen(peerIDsetting);
       rm.onError(showError, waiting);
+      rm.onConnection();
       rm.onCall($('#monitor-video'), connecting, waiting);
 
       rm.initialize($('#device-video'), initializing, waiting);

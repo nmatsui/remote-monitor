@@ -28,6 +28,7 @@ ns = (function() {
         video: true
       }, (function(_this) {
         return function(stream) {
+          console.log("getUserMedia success");
           video.prop('src', URL.createObjectURL(stream));
           _this.ls = stream;
           _this.ls.getAudioTracks()[0].enabled = false;
@@ -35,6 +36,7 @@ ns = (function() {
         };
       })(this), (function(_this) {
         return function() {
+          console.log("getUserMedia fail");
           return console.log("ビデオカメラとマイクへのアクセスに失敗しました");
         };
       })(this));
@@ -61,16 +63,8 @@ ns = (function() {
       })(this));
     };
 
-    RemoteMonitor.prototype.onCall = function(video, connecting, waiting) {
-      console.log("onCall");
-      this.peer.on('call', (function(_this) {
-        return function(call) {
-          console.log("peer.call");
-          call.answer(_this.ls);
-          _this.__connect(call, video, waiting);
-          return connecting();
-        };
-      })(this));
+    RemoteMonitor.prototype.onConnection = function() {
+      console.log("onConnection");
       return this.peer.on('connection', (function(_this) {
         return function(conn) {
           console.log("peer.connection");
@@ -87,6 +81,18 @@ ns = (function() {
                 return console.log("event: unknown");
             }
           });
+        };
+      })(this));
+    };
+
+    RemoteMonitor.prototype.onCall = function(video, connecting, waiting) {
+      console.log("onCall");
+      return this.peer.on('call', (function(_this) {
+        return function(call) {
+          console.log("peer.call");
+          call.answer(_this.ls);
+          _this.__connect(call, video, waiting);
+          return connecting();
         };
       })(this));
     };
@@ -114,8 +120,10 @@ ns = (function() {
       return conn.on('open', (function(_this) {
         return function() {
           if (state) {
+            console.log("send message: mic-off");
             return conn.send('mic-off');
           } else {
+            console.log("send message: mic-on");
             return conn.send('mic-on');
           }
         };
@@ -123,6 +131,7 @@ ns = (function() {
     };
 
     RemoteMonitor.prototype.terminate = function() {
+      console.log("terminate");
       return this.peer.destroy();
     };
 
@@ -133,10 +142,14 @@ ns = (function() {
       }
       call.on('stream', (function(_this) {
         return function(stream) {
+          console.log("call.stream");
           return video.prop('src', URL.createObjectURL(stream));
         };
       })(this));
-      call.on('close', waiting);
+      call.on('close', function() {
+        console.log("call.close");
+        return waiting();
+      });
       return this.ec = call;
     };
 

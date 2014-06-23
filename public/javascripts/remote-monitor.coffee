@@ -19,13 +19,15 @@ ns = do ->
                                navigator.mozGetUserMedia
       navigator.getUserMedia {audio:true, video:true}
       , (stream) =>
+        console.log "getUserMedia success"
         video.prop 'src', URL.createObjectURL(stream)
         @ls = stream
         @ls.getAudioTracks()[0].enabled = false
         waiting()
       , =>
+        console.log "getUserMedia fail"
         console.log "ビデオカメラとマイクへのアクセスに失敗しました"
-  
+
     onOpen: (peerIDsetting) ->
       console.log "onOpen"
       @peer.on 'open', =>
@@ -38,14 +40,9 @@ ns = do ->
         console.log "peer.error: #{err.message}"
         showError(err.message)
         waiting()
-  
-    onCall: (video, connecting, waiting) ->
-      console.log "onCall"
-      @peer.on 'call', (call) =>
-        console.log "peer.call"
-        call.answer @ls
-        @__connect call, video, waiting
-        connecting()
+
+    onConnection: ->
+      console.log "onConnection"
       @peer.on 'connection', (conn) =>
         console.log "peer.connection"
         conn.on 'data', (data) =>
@@ -59,6 +56,14 @@ ns = do ->
               @ls.getAudioTracks()[0].enabled = false
             else
               console.log "event: unknown"
+  
+    onCall: (video, connecting, waiting) ->
+      console.log "onCall"
+      @peer.on 'call', (call) =>
+        console.log "peer.call"
+        call.answer @ls
+        @__connect call, video, waiting
+        connecting()
   
     makeCall: (callto, video, connecting, waiting) ->
       console.log "makeCall : #{callto}"
@@ -79,19 +84,25 @@ ns = do ->
       conn = @peer.connect @callto
       conn.on 'open', =>
         if state
+          console.log "send message: mic-off"
           conn.send 'mic-off'
         else
+          console.log "send message: mic-on"
           conn.send 'mic-on'
 
     terminate: ->
+      console.log "terminate"
       @peer.destroy()
   
     __connect: (call, video, waiting) ->
       console.log "__connect"
       @ec.close() if @ec?
       call.on 'stream', (stream) =>
+        console.log "call.stream"
         video.prop 'src', URL.createObjectURL(stream)
-      call.on 'close', waiting
+      call.on 'close', ->
+        console.log "call.close"
+        waiting()
       @ec = call
 
   exports

@@ -19,6 +19,7 @@
         $('#peerid-container').hide();
         $('#monitor-video').hide();
         $('#device-video').hide();
+        $('#connecting').hide();
       }
       function initializing() {
         allhide();
@@ -30,12 +31,13 @@
       }
       function connecting() {
         allhide();
-        $('#device-video').height($('html').prop('clientHeight'));
-        $('#device-video').width($('html').prop('clientWidth'));
-        $('#device-video').show();
+        $('#connecting').show();
       }
       function showError(errmessage) {
         alert(errmessage);
+      }
+      function showMessage(message) {
+        $('#message').text(message);
       }
 
       $('#terminate').click(function() {
@@ -45,7 +47,7 @@
 
       rm.onOpen(peerIDsetting);
       rm.onError(showError, waiting);
-      rm.onConnection();
+      rm.onConnection(showMessage);
       rm.onCall($('#monitor-video'), connecting, waiting);
 
       rm.initialize($('#device-video'), initializing, waiting);
@@ -63,6 +65,10 @@
   <div id="video-container" class="center">
     <video id="monitor-video" autoplay></video>
     <video id="device-video" class="center" muted="true" autoplay></video>
+  </div>
+  <div id="connecting" class="text">
+    <p>モニターと接続中</p>
+    <p><span id="message"></span></p>
   </div>
 </body>
 </html>

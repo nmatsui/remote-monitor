@@ -14,8 +14,8 @@
 
       function allhide() {
         $('#initialize').hide();
-        $('#call-form').hide();
-        $('#end-call-form').hide();
+        $('#makecall-form').hide();
+        $('#calling-form').hide();
         $('#device-video').hide();
         $('#monitor-video').hide();
       }
@@ -25,7 +25,7 @@
       }
       function waiting() {
         allhide();
-        $('#call-form').show();
+        $('#makecall-form').show();
       }
       function connecting() {
         allhide();
@@ -39,13 +39,13 @@
 
       $('#make-call').click(function() {
         rm.makeCall($('#callto-id').val(), $('#device-video'), connecting, waiting);
-        $('#call-form').hide();
-        $('#end-call-form').show();
+        $('#makecall-form').hide();
+        $('#calling-form').show();
       });
       $('#end-call').click(function() {
         rm.closeCall();
-        $('#end-call-form').hide();
-        $('#call-form').show();
+        $('#calling-form').hide();
+        $('#makecall-form').show();
       });
       $('#toggle-mic').click(function() {
         rm.toggleMIC();
@@ -57,7 +57,9 @@
           $('#toggle-mic').text('MIC ON');
         }
       });
-
+      $('#send-message').click(function() {
+        rm.sendMessage($('#message').val());
+      });
       $('#terminate').click(function() {
         rm.terminate();
         window.open('about:blank', '_self').close();
@@ -74,16 +76,18 @@
     <p>ビデオカメラとマイクを使います<br/>許可をクリックしてください</p>
   </div>
   <div id="caller" class="text">
-    <div id="call-form">
+    <div id="makecall-form">
       <p>デバイスのpeerjsIDを入力し、CALLしてください</p>
       <input type="text" placeholder="peerjsID" id="callto-id"/>
       <button id="make-call">CALL</button>
       <br/>
       <button id="terminate">TERMINATE</button>
     </div>
-    <div id="end-call-form">
+    <div id="calling-form">
       <button id="end-call">END CALL</button>
       <button id="toggle-mic">MIC ON</button>
+      <input type="text" placeholder="message" id="message"/>
+      <button id="send-message">SEND</button>
     </div>
   </div>
   <div id="video-container">

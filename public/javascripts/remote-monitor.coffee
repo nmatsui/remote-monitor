@@ -41,7 +41,7 @@ ns = do ->
         showError(err.message)
         waiting()
 
-    onConnection: ->
+    onConnection: (handler = null)->
       console.log "onConnection"
       @peer.on 'connection', (conn) =>
         console.log "peer.connection"
@@ -55,7 +55,10 @@ ns = do ->
               console.log "event: mic-off"
               @ls.getAudioTracks()[0].enabled = false
             else
-              console.log "event: unknown"
+              if handler?
+                handler(data)
+              else
+                console.log "event: unknown"
   
     onCall: (video, connecting, waiting) ->
       console.log "onCall"
@@ -84,11 +87,18 @@ ns = do ->
       conn = @peer.connect @callto
       conn.on 'open', =>
         if state
-          console.log "send message: mic-off"
           conn.send 'mic-off'
+          console.log "sent message: mic-off"
         else
-          console.log "send message: mic-on"
           conn.send 'mic-on'
+          console.log "sent message: mic-on"
+
+    sendMessage: (message) ->
+      console.log "sendMessage: #{message}"
+      conn = @peer.connect @callto
+      conn.on 'open', =>
+        conn.send message
+        console.log "sent message: #{message}"
 
     terminate: ->
       console.log "terminate"

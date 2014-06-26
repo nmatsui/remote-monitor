@@ -63,7 +63,10 @@ ns = (function() {
       })(this));
     };
 
-    RemoteMonitor.prototype.onConnection = function() {
+    RemoteMonitor.prototype.onConnection = function(handler) {
+      if (handler == null) {
+        handler = null;
+      }
       console.log("onConnection");
       return this.peer.on('connection', (function(_this) {
         return function(conn) {
@@ -78,7 +81,11 @@ ns = (function() {
                 console.log("event: mic-off");
                 return _this.ls.getAudioTracks()[0].enabled = false;
               default:
-                return console.log("event: unknown");
+                if (handler != null) {
+                  return handler(data);
+                } else {
+                  return console.log("event: unknown");
+                }
             }
           });
         };
@@ -120,12 +127,24 @@ ns = (function() {
       return conn.on('open', (function(_this) {
         return function() {
           if (state) {
-            console.log("send message: mic-off");
-            return conn.send('mic-off');
+            conn.send('mic-off');
+            return console.log("sent message: mic-off");
           } else {
-            console.log("send message: mic-on");
-            return conn.send('mic-on');
+            conn.send('mic-on');
+            return console.log("sent message: mic-on");
           }
+        };
+      })(this));
+    };
+
+    RemoteMonitor.prototype.sendMessage = function(message) {
+      var conn;
+      console.log("sendMessage: " + message);
+      conn = this.peer.connect(this.callto);
+      return conn.on('open', (function(_this) {
+        return function() {
+          conn.send(message);
+          return console.log("sent message: " + message);
         };
       })(this));
     };

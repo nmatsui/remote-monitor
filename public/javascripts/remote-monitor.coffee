@@ -41,24 +41,24 @@ ns = do ->
         showError(err.message)
         waiting()
 
-    onConnection: (handler = null)->
+    onConnection: (messageHandler = null, imageHandler = null)->
       console.log "onConnection"
       @peer.on 'connection', (conn) =>
         console.log "peer.connection"
         conn.on 'data', (data) =>
           console.log "conn.data #{data}"
-          switch data
-            when 'mic-on'
-              console.log "event: mic-on"
-              @ls.getAudioTracks()[0].enabled = true
-            when 'mic-off'
-              console.log "event: mic-off"
-              @ls.getAudioTracks()[0].enabled = false
-            else
-              if handler?
-                handler(data)
-              else
-                console.log "event: unknown"
+
+          if /^event:(.*)/.exec data
+            console.log "event received:#{RegExp.$1}"
+            @__eventHandler(RegExp.$1)
+          else if /^message:(.*)/.exec data
+            console.log "message received:#{RegExp.$1}"
+            messageHandler(RegExp.$1) if messageHandler
+          else if /^data:(.*)/.exec data
+            console.log "data received:#{RegExp.$1}"
+            imageHandler(RegExp.$1) if imageHandler
+          else
+            console.log "unknown data received:#{data}"
   
     onCall: (video, connecting, waiting) ->
       console.log "onCall"
@@ -83,22 +83,23 @@ ns = do ->
       state = @ls.getAudioTracks()[0].enabled
       console.log "toggleMIC state:#{state}"
       @ls.getAudioTracks()[0].enabled = !state
-  
-      conn = @peer.connect @callto
-      conn.on 'open', =>
-        if state
-          conn.send 'mic-off'
-          console.log "sent message: mic-off"
-        else
-          conn.send 'mic-on'
-          console.log "sent message: mic-on"
+
+      if state
+        @__send "event:mic-off"
+      else
+        @__send "event:mic-on"
 
     sendMessage: (message) ->
       console.log "sendMessage: #{message}"
-      conn = @peer.connect @callto
-      conn.on 'open', =>
-        conn.send message
-        console.log "sent message: #{message}"
+      @__send "message:#{message}"
+
+    sendData: (data) ->
+      console.log "sendData: #{data}"
+      @__send "data:#{data}"
+
+    clearCapture: ->
+      console.log "clearCapture"
+      @__send "data:clear-capture"
 
     terminate: ->
       console.log "terminate"
@@ -114,5 +115,24 @@ ns = do ->
         console.log "call.close"
         waiting()
       @ec = call
+
+    __send: (data) ->
+      head = if data.length < 20 then data else "#{data.substring 0, 20}..."
+      conn = @peer.connect @callto
+      conn.on 'open', =>
+        conn.send data
+        console.log "sent data:#{head}"
+
+    __eventHandler: (event) ->
+      console.log "__eventHandler event:#{event}"
+      switch event
+        when 'mic-on'
+          console.log "event: mic-on"
+          @ls.getAudioTracks()[0].enabled = true
+        when 'mic-off'
+          console.log "event: mic-off"
+          @ls.getAudioTracks()[0].enabled = false
+        else
+          console.log "event: unknown"
 
   exports

@@ -20,6 +20,7 @@
         $('#monitor-video').hide();
         $('#device-video').hide();
         $('#connecting').hide();
+        $('#image-container').hide();
       }
       function initializing() {
         allhide();
@@ -39,6 +40,21 @@
       function showMessage(message) {
         $('#message').text(message);
       }
+      function toggleImage(image) {
+        console.log('hoge:' + image);
+        if (/^clear-capture.*/.test(image)) {
+          console.log('1');
+          $('#sentImage')[0].src = "";
+          $('#image-container').hide();
+          $('#connecting').show();
+        }
+        else {
+          console.log('2');
+          $('#sentImage')[0].src = image;
+          $('#connecting').hide();
+          $('#image-container').show();
+        }
+      }
 
       $('#terminate').click(function() {
         rm.terminate();
@@ -47,7 +63,7 @@
 
       rm.onOpen(peerIDsetting);
       rm.onError(showError, waiting);
-      rm.onConnection(showMessage);
+      rm.onConnection(showMessage, toggleImage);
       rm.onCall($('#monitor-video'), connecting, waiting);
 
       rm.initialize($('#device-video'), initializing, waiting);
@@ -69,6 +85,9 @@
   <div id="connecting" class="text">
     <p>モニターと接続中</p>
     <p><span id="message"></span></p>
+  </div>
+  <div id="image-container">
+    <img id="sentImage" src=""/>
   </div>
 </body>
 </html>

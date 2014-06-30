@@ -63,9 +63,12 @@ ns = (function() {
       })(this));
     };
 
-    RemoteMonitor.prototype.onConnection = function(handler) {
-      if (handler == null) {
-        handler = null;
+    RemoteMonitor.prototype.onConnection = function(messageHandler, imageHandler) {
+      if (messageHandler == null) {
+        messageHandler = null;
+      }
+      if (imageHandler == null) {
+        imageHandler = null;
       }
       console.log("onConnection");
       return this.peer.on('connection', (function(_this) {
@@ -73,19 +76,21 @@ ns = (function() {
           console.log("peer.connection");
           return conn.on('data', function(data) {
             console.log("conn.data " + data);
-            switch (data) {
-              case 'mic-on':
-                console.log("event: mic-on");
-                return _this.ls.getAudioTracks()[0].enabled = true;
-              case 'mic-off':
-                console.log("event: mic-off");
-                return _this.ls.getAudioTracks()[0].enabled = false;
-              default:
-                if (handler != null) {
-                  return handler(data);
-                } else {
-                  return console.log("event: unknown");
-                }
+            if (/^event:(.*)/.exec(data)) {
+              console.log("event received:" + RegExp.$1);
+              return _this.__eventHandler(RegExp.$1);
+            } else if (/^message:(.*)/.exec(data)) {
+              console.log("message received:" + RegExp.$1);
+              if (messageHandler) {
+                return messageHandler(RegExp.$1);
+              }
+            } else if (/^data:(.*)/.exec(data)) {
+              console.log("data received:" + RegExp.$1);
+              if (imageHandler) {
+                return imageHandler(RegExp.$1);
+              }
+            } else {
+              return console.log("unknown data received:" + data);
             }
           });
         };
@@ -119,34 +124,30 @@ ns = (function() {
     };
 
     RemoteMonitor.prototype.toggleMIC = function() {
-      var conn, state;
+      var state;
       state = this.ls.getAudioTracks()[0].enabled;
       console.log("toggleMIC state:" + state);
       this.ls.getAudioTracks()[0].enabled = !state;
-      conn = this.peer.connect(this.callto);
-      return conn.on('open', (function(_this) {
-        return function() {
-          if (state) {
-            conn.send('mic-off');
-            return console.log("sent message: mic-off");
-          } else {
-            conn.send('mic-on');
-            return console.log("sent message: mic-on");
-          }
-        };
-      })(this));
+      if (state) {
+        return this.__send("event:mic-off");
+      } else {
+        return this.__send("event:mic-on");
+      }
     };
 
     RemoteMonitor.prototype.sendMessage = function(message) {
-      var conn;
       console.log("sendMessage: " + message);
-      conn = this.peer.connect(this.callto);
-      return conn.on('open', (function(_this) {
-        return function() {
-          conn.send(message);
-          return console.log("sent message: " + message);
-        };
-      })(this));
+      return this.__send("message:" + message);
+    };
+
+    RemoteMonitor.prototype.sendData = function(data) {
+      console.log("sendData: " + data);
+      return this.__send("data:" + data);
+    };
+
+    RemoteMonitor.prototype.clearCapture = function() {
+      console.log("clearCapture");
+      return this.__send("data:clear-capture");
     };
 
     RemoteMonitor.prototype.terminate = function() {
@@ -170,6 +171,32 @@ ns = (function() {
         return waiting();
       });
       return this.ec = call;
+    };
+
+    RemoteMonitor.prototype.__send = function(data) {
+      var conn, head;
+      head = data.length < 20 ? data : "" + (data.substring(0, 20)) + "...";
+      conn = this.peer.connect(this.callto);
+      return conn.on('open', (function(_this) {
+        return function() {
+          conn.send(data);
+          return console.log("sent data:" + head);
+        };
+      })(this));
+    };
+
+    RemoteMonitor.prototype.__eventHandler = function(event) {
+      console.log("__eventHandler event:" + event);
+      switch (event) {
+        case 'mic-on':
+          console.log("event: mic-on");
+          return this.ls.getAudioTracks()[0].enabled = true;
+        case 'mic-off':
+          console.log("event: mic-off");
+          return this.ls.getAudioTracks()[0].enabled = false;
+        default:
+          return console.log("event: unknown");
+      }
     };
 
     return RemoteMonitor;

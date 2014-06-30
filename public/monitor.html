@@ -75,16 +75,24 @@
 
           $('#device-video').hide();
           $('#capture-canvas').show();
+          $('#send-image').prop('disabled', false);
           $('#toggle-capture').text('LIVE');
         }
         else {
+          rm.clearCapture();
+
           $('#capture-canvas').hide();
+          $('#send-image').prop('disabled', true);
           $('#device-video').show();
           $('#toggle-capture').text('CAPTURE');
         }
       });
       $('#send-message').click(function() {
         rm.sendMessage($('#message').val());
+      });
+      $('#send-image').click(function() {
+        var data = $('#capture-canvas')[0].toDataURL('image/png');
+        rm.sendData(data);
       });
       $('#terminate').click(function() {
         rm.terminate();
@@ -139,16 +147,15 @@
       <button id="terminate">TERMINATE</button>
     </div>
     <div id="calling-form">
-      <div>
-        <button id="end-call">END CALL</button>
-        <span class="separate">|</span>
-        <button id="toggle-mic">MIC ON</button>
-        <span class="separate">|</span>
-        <input type="text" placeholder="message" id="message"/>
-        <button id="send-message">SEND</button>
-        <span class="separate">|</span>
-        <button id="toggle-capture">CAPTURE</button>
-      </div>
+      <button id="end-call">END CALL</button>
+      <span class="separate">|</span>
+      <button id="toggle-mic">MIC ON</button>
+      <span class="separate">|</span>
+      <input type="text" placeholder="message" id="message"/>
+      <button id="send-message">SEND MESSAGE</button>
+      <span class="separate">|</span>
+      <button id="toggle-capture">CAPTURE</button>
+      <button id="send-image" disabled="true">SEND IMAGE</button>
     </div>
   </div>
   <div id="video-container">

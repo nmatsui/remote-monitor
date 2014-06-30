@@ -2,6 +2,9 @@
   display: block;
   margin:0 auto;
 }
+.separate {
+  padding:4px;
+}
 video {
   margin:0px;
   padding:0px;

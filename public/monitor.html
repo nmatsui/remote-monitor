@@ -11,6 +11,7 @@
     $(function() {
       var rm = new ns.RemoteMonitor();
       var mic = false;
+      var cap = false;
 
       function allhide() {
         $('#initialize').hide();
@@ -18,6 +19,7 @@
         $('#calling-form').hide();
         $('#device-video').hide();
         $('#monitor-video').hide();
+        $('#capture-canvas').hide();
       }
       function initializing() {
         allhide();
@@ -29,12 +31,18 @@
       }
       function connecting() {
         allhide();
-        $('#device-video').height($('html').prop('clientHeight'));
-        $('#device-video').width($('html').prop('clientWidth'));
+        //$('#device-video').height($('html').prop('clientHeight'));
+        //$('#device-video').width($('html').prop('clientWidth'));
         $('#device-video').show();
       }
       function showError(errmessage) {
         alert(errmessage);
+      }
+      function captureVideo(video, canvas) {
+        var ctx = canvas.getContext('2d');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
       }
 
       $('#make-call').click(function() {
@@ -55,6 +63,21 @@
         }
         else {
           $('#toggle-mic').text('MIC ON');
+        }
+      });
+      $('#toggle-capture').click(function() {
+        cap = !cap;
+        if (cap) {
+          captureVideo($('#device-video')[0], $('#capture-canvas')[0]);
+
+          $('#device-video').hide();
+          $('#capture-canvas').show();
+          $('#toggle-capture').text('LIVE');
+        }
+        else {
+          $('#capture-canvas').hide();
+          $('#device-video').show();
+          $('#toggle-capture').text('CAPTURE');
         }
       });
       $('#send-message').click(function() {
@@ -84,15 +107,24 @@
       <button id="terminate">TERMINATE</button>
     </div>
     <div id="calling-form">
-      <button id="end-call">END CALL</button>
-      <button id="toggle-mic">MIC ON</button>
-      <input type="text" placeholder="message" id="message"/>
-      <button id="send-message">SEND</button>
+      <div>
+        <button id="end-call">END CALL</button>
+        <span class="separate">|</span>
+        <button id="toggle-mic">MIC ON</button>
+        <span class="separate">|</span>
+        <input type="text" placeholder="message" id="message"/>
+        <button id="send-message">SEND</button>
+        <span class="separate">|</span>
+        <button id="toggle-capture">CAPTURE</button>
+      </div>
     </div>
   </div>
   <div id="video-container">
     <video id="device-video" class="center" autoplay></video>
     <video id="monitor-video" muted="true" autoplay></video>
+  </div>
+  <div id="capture-container">
+    <canvas id="capture-canvas" class="center"></canvas>
   </div>
 </body>
 </html>

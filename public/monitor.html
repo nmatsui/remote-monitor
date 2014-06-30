@@ -12,6 +12,9 @@
       var rm = new ns.RemoteMonitor();
       var mic = false;
       var cap = false;
+      var sx = 0;
+      var sy = 0;
+      var drawing = false;
 
       function allhide() {
         $('#initialize').hide();
@@ -86,6 +89,35 @@
       $('#terminate').click(function() {
         rm.terminate();
         window.open('about:blank', '_self').close();
+      });
+
+      $('#capture-canvas').on('mousedown', function(e) {
+        drawing = true;
+        sx = e.pageX - $(this).offset().left;
+        sy = e.pageY - $(this).offset().top;
+        return false;
+      });
+      $('#capture-canvas').on('mousemove', function(e) {
+        if (drawing) {
+          var ctx = this.getContext('2d');
+          var ex = e.pageX - $(this).offset().left;
+          var ey = e.pageY - $(this).offset().top;
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = 'rgb(255, 0, 0)';
+          ctx.beginPath();
+          ctx.moveTo(sx, sy);
+          ctx.lineTo(ex, ey);
+          ctx.stroke();
+          ctx.closePath();
+          sx = ex;
+          sy = ey;
+        }
+      });
+      $('#capture-canvas').on('mouseup', function() {
+        drawing = false;
+      });
+      $('#capture-canvas').on('mouseleave', function() {
+        drawing = false;
       });
 
       rm.onError(showError, waiting);

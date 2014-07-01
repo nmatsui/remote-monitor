@@ -118,7 +118,7 @@ ns = do ->
 
     __send: (data) ->
       head = if data.length < 20 then data else "#{data.substring 0, 20}..."
-      conn = @peer.connect @callto
+      conn = @peer.connect @callto, {reliable: true}
       conn.on 'open', =>
         conn.send data
         console.log "sent data:#{head}"

@@ -43,13 +43,11 @@
       function toggleImage(image) {
         console.log('hoge:' + image);
         if (/^clear-capture.*/.test(image)) {
-          console.log('1');
           $('#sentImage')[0].src = "";
           $('#image-container').hide();
           $('#connecting').show();
         }
         else {
-          console.log('2');
           $('#sentImage')[0].src = image;
           $('#connecting').hide();
           $('#image-container').show();

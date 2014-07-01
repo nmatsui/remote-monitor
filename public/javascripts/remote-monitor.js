@@ -176,7 +176,9 @@ ns = (function() {
     RemoteMonitor.prototype.__send = function(data) {
       var conn, head;
       head = data.length < 20 ? data : "" + (data.substring(0, 20)) + "...";
-      conn = this.peer.connect(this.callto);
+      conn = this.peer.connect(this.callto, {
+        reliable: true
+      });
       return conn.on('open', (function(_this) {
         return function() {
           conn.send(data);

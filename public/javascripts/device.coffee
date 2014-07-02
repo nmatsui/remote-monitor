@@ -1,5 +1,5 @@
 $ ->
-  rm = new ns.RemoteMonitor()
+  dc = new ns.DeviceClass()
 
   peerIDsetting = (id) ->
     $('#device-id').text(id)
@@ -37,7 +37,7 @@ $ ->
     $('#image-container').show()
 
   $('#end-call').click ->
-    rm.closeCall()
+    dc.closeCall()
     waiting()
   
   $('#close-image').click ->
@@ -46,11 +46,11 @@ $ ->
     $('#connecting').show()
   
   $('#terminate').click ->
-    rm.terminate()
+    dc.terminate()
     window.open('about:blank', '_self').close()
 
-  rm.onOpen(peerIDsetting)
-  rm.onError(showError, waiting)
-  rm.onConnection(showMessage, showImage)
-  rm.onCall($('#monitor-video'), connecting, waiting)
-  rm.initialize($('#device-video'), initializing, waiting)
+  dc.onOpen(peerIDsetting)
+  dc.onConnection(showMessage, showImage)
+  dc.onCall($('#monitor-video'), connecting, waiting)
+  dc.onError(showError, waiting)
+  dc.initialize($('#device-video'), initializing, waiting)

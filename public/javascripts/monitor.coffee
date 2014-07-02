@@ -2,7 +2,7 @@ $ ->
   LINE_WIDTH = 2
   LINE_COLOR = 'rgb(255, 0, 0)'
 
-  rm = new ns.RemoteMonitor()
+  mc = new ns.MonitorClass()
   mic = false
   cap = false
   drawing = false
@@ -42,17 +42,17 @@ $ ->
   $('#make-call').click ->
     calltoId = $('#callto-id').val()
     video = $('#device-video')
-    rm.makeCall(calltoId, video, connecting, waiting)
+    mc.makeCall(calltoId, video, connecting, waiting)
     $('#makecall-form').hide()
     $('#calling-form').show()
   
   $('#end-call').click ->
-    rm.closeCall()
+    mc.closeCall()
     $('#calling-form').hide()
     $('#makecall-form').show()
   
   $('#toggle-mic').click ->
-    rm.toggleMIC()
+    mc.toggleMIC()
     mic = !mic
     if mic
       $('#toggle-mic').text('MIC OFF')
@@ -78,14 +78,14 @@ $ ->
   
   $('#send-message').click ->
     message = $('#message').val()
-    rm.sendMessage(message)
+    mc.sendMessage(message)
   
   $('#send-image').click ->
     data = $('#capture-canvas')[0].toDataURL('image/png')
-    rm.sendData(data)
+    mc.sendData(data)
   
   $('#terminate').click ->
-    rm.terminate()
+    mc.terminate()
     window.open('about:blank', '_self').close()
 
   $('#capture-canvas').on 'mousedown', (e) ->
@@ -118,5 +118,5 @@ $ ->
     drawing = false
     false
 
-  rm.onError(showError, waiting)
-  rm.initialize($('#monitor-video'), initializing, waiting)
+  mc.onError(showError, waiting)
+  mc.initialize($('#monitor-video'), initializing, waiting)

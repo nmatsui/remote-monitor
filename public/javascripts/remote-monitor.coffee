@@ -1,15 +1,15 @@
 ns = do ->
   exports = {}
 
-  host = '192.168.1.122'
-  port = 9000
-  path = '/remote-monitor'
-  debug = 3
+  HOST  = '192.168.1.122'
+  PORT  = 9000
+  PATH  = '/remote-monitor'
+  DEBUG = 3
 
-  class exports.RemoteMonitor
+  class BaseClass
     constructor: ->
-      console.log "constructor"
-      @peer = new Peer {host:host, port:port, path:path, debug:debug}
+      console.log "constructor of BaseClass"
+      @peer = new Peer {host:HOST, port:PORT, path:PATH, debug:DEBUG}
   
     initialize: (video, initializing, waiting) ->
       console.log "initialize"
@@ -28,12 +28,6 @@ ns = do ->
         console.log "getUserMedia fail"
         console.log "ビデオカメラとマイクへのアクセスに失敗しました"
 
-    onOpen: (peerIDsetting) ->
-      console.log "onOpen"
-      @peer.on 'open', =>
-        console.log "peer.open"
-        peerIDsetting(@peer.id)
-  
     onError: (showError, waiting) ->
       console.log "onError"
       @peer.on 'error', (err) =>
@@ -41,6 +35,73 @@ ns = do ->
         showError(err.message)
         waiting()
 
+    closeCall: ->
+      console.log "closeCall"
+      @ec.close()
+  
+    terminate: ->
+      console.log "terminate"
+      @peer.destroy()
+  
+    __connect: (call, video, waiting) ->
+      console.log "__connect"
+      @ec.close() if @ec?
+      call.on 'stream', (stream) =>
+        console.log "call.stream"
+        video.prop 'src', URL.createObjectURL(stream)
+      call.on 'close', ->
+        console.log "call.close"
+        waiting()
+      @ec = call
+
+  class exports.MonitorClass extends BaseClass
+    constructor: ->
+      console.log "constructor of MonitorClass"
+      super()
+
+    makeCall: (callto, video, connecting, waiting) ->
+      console.log "makeCall : #{callto}"
+      @callto = callto
+      call = @peer.call callto, @ls
+      @__connect call, video, waiting
+      connecting()
+  
+    toggleMIC: ->
+      state = @ls.getAudioTracks()[0].enabled
+      console.log "toggleMIC state:#{state}"
+      @ls.getAudioTracks()[0].enabled = !state
+
+      if state
+        @__send "event:mic-off"
+      else
+        @__send "event:mic-on"
+
+    sendMessage: (message) ->
+      console.log "sendMessage: #{message}"
+      @__send "message:#{message}"
+
+    sendData: (data) ->
+      console.log "sendData: #{data}"
+      @__send "data:#{data}"
+
+    __send: (data) ->
+      head = if data.length < 20 then data else "#{data.substring 0, 20}..."
+      conn = @peer.connect @callto, {reliable: true}
+      conn.on 'open', =>
+        conn.send data
+        console.log "sent data:#{head}"
+
+  class exports.DeviceClass extends BaseClass
+    constructor: ->
+      console.log "constructor of DeviceClass"
+      super()
+
+    onOpen: (peerIDsetting) ->
+      console.log "onOpen"
+      @peer.on 'open', =>
+        console.log "peer.open"
+        peerIDsetting(@peer.id)
+  
     onConnection: (messageHandler = null, imageHandler = null)->
       console.log "onConnection"
       @peer.on 'connection', (conn) =>
@@ -68,57 +129,6 @@ ns = do ->
         @__connect call, video, waiting
         connecting()
   
-    makeCall: (callto, video, connecting, waiting) ->
-      console.log "makeCall : #{callto}"
-      @callto = callto
-      call = @peer.call callto, @ls
-      @__connect call, video, waiting
-      connecting()
-  
-    closeCall: ->
-      console.log "closeCall"
-      @ec.close()
-  
-    toggleMIC: ->
-      state = @ls.getAudioTracks()[0].enabled
-      console.log "toggleMIC state:#{state}"
-      @ls.getAudioTracks()[0].enabled = !state
-
-      if state
-        @__send "event:mic-off"
-      else
-        @__send "event:mic-on"
-
-    sendMessage: (message) ->
-      console.log "sendMessage: #{message}"
-      @__send "message:#{message}"
-
-    sendData: (data) ->
-      console.log "sendData: #{data}"
-      @__send "data:#{data}"
-
-    terminate: ->
-      console.log "terminate"
-      @peer.destroy()
-  
-    __connect: (call, video, waiting) ->
-      console.log "__connect"
-      @ec.close() if @ec?
-      call.on 'stream', (stream) =>
-        console.log "call.stream"
-        video.prop 'src', URL.createObjectURL(stream)
-      call.on 'close', ->
-        console.log "call.close"
-        waiting()
-      @ec = call
-
-    __send: (data) ->
-      head = if data.length < 20 then data else "#{data.substring 0, 20}..."
-      conn = @peer.connect @callto, {reliable: true}
-      conn.on 'open', =>
-        conn.send data
-        console.log "sent data:#{head}"
-
     __eventHandler: (event) ->
       console.log "__eventHandler event:#{event}"
       switch event

@@ -2,6 +2,9 @@
   display: block;
   margin:0 auto;
 }
+.separate {
+  padding:4px;
+}
 video {
   margin:0px;
   padding:0px;
@@ -10,6 +13,10 @@ video {
   body {
     margin:0px;
     padding:0px;
+  }
+  button {
+    font-size: 36px;
+    padding: 10px 30px;
   }
   div.text {
     font-size:48px;

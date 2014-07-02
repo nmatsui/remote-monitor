@@ -7,50 +7,7 @@
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>
   <script src="javascripts/peer.js"></script>
   <script src="javascripts/remote-monitor.js"></script>
-  <script>
-    $(function() {
-      var rm = new ns.RemoteMonitor();
-
-      function peerIDsetting(id) {
-        $('#device-id').text(id);
-      }
-      function allhide() {
-        $('#initialize').hide();
-        $('#peerid-container').hide();
-        $('#monitor-video').hide();
-        $('#device-video').hide();
-      }
-      function initializing() {
-        allhide();
-        $('#initialize').show();
-      }
-      function waiting() {
-        allhide();
-        $('#peerid-container').show();
-      }
-      function connecting() {
-        allhide();
-        $('#device-video').height($('html').prop('clientHeight'));
-        $('#device-video').width($('html').prop('clientWidth'));
-        $('#device-video').show();
-      }
-      function showError(errmessage) {
-        alert(errmessage);
-      }
-
-      $('#terminate').click(function() {
-        rm.terminate();
-        window.open('about:blank', '_self').close();
-      });
-
-      rm.onOpen(peerIDsetting);
-      rm.onError(showError, waiting);
-      rm.onConnection();
-      rm.onCall($('#monitor-video'), connecting, waiting);
-
-      rm.initialize($('#device-video'), initializing, waiting);
-    });
-  </script>
+  <script src="javascripts/device.js"></script>
 </head>
 <body>
   <div id="initialize" class="text">
@@ -63,6 +20,17 @@
   <div id="video-container" class="center">
     <video id="monitor-video" autoplay></video>
     <video id="device-video" class="center" muted="true" autoplay></video>
+  </div>
+  <div id="connecting" class="text">
+    <p>
+      モニターと接続中
+      <button id="end-call">END CALL</button>
+    </p>
+    <p><span id="message"></span></p>
+  </div>
+  <div id="image-container">
+    <img id="sent-image" src=""/>
+    <button id="close-image">CLOSE</button>
   </div>
 </body>
 </html>

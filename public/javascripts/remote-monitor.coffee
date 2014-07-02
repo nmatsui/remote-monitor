@@ -97,10 +97,6 @@ ns = do ->
       console.log "sendData: #{data}"
       @__send "data:#{data}"
 
-    clearCapture: ->
-      console.log "clearCapture"
-      @__send "data:clear-capture"
-
     terminate: ->
       console.log "terminate"
       @peer.destroy()

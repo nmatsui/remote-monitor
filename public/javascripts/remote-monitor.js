@@ -145,11 +145,6 @@ ns = (function() {
       return this.__send("data:" + data);
     };
 
-    RemoteMonitor.prototype.clearCapture = function() {
-      console.log("clearCapture");
-      return this.__send("data:clear-capture");
-    };
-
     RemoteMonitor.prototype.terminate = function() {
       console.log("terminate");
       return this.peer.destroy();

@@ -40,20 +40,21 @@
       function showMessage(message) {
         $('#message').text(message);
       }
-      function toggleImage(image) {
-        console.log('hoge:' + image);
-        if (/^clear-capture.*/.test(image)) {
-          $('#sentImage')[0].src = "";
-          $('#image-container').hide();
-          $('#connecting').show();
-        }
-        else {
-          $('#sentImage')[0].src = image;
-          $('#connecting').hide();
-          $('#image-container').show();
-        }
+      function showImage(image) {
+        $('#sent-image')[0].src = image;
+        $('#connecting').hide();
+        $('#image-container').show();
       }
 
+      $('#end-call').click(function() {
+        rm.closeCall();
+        waiting();
+      });
+      $('#close-image').click(function() {
+        $('#sent-image')[0].src = "";
+        $('#image-container').hide();
+        $('#connecting').show();
+      });
       $('#terminate').click(function() {
         rm.terminate();
         window.open('about:blank', '_self').close();
@@ -61,7 +62,7 @@
 
       rm.onOpen(peerIDsetting);
       rm.onError(showError, waiting);
-      rm.onConnection(showMessage, toggleImage);
+      rm.onConnection(showMessage, showImage);
       rm.onCall($('#monitor-video'), connecting, waiting);
 
       rm.initialize($('#device-video'), initializing, waiting);
@@ -81,11 +82,15 @@
     <video id="device-video" class="center" muted="true" autoplay></video>
   </div>
   <div id="connecting" class="text">
-    <p>モニターと接続中</p>
+    <p>
+      モニターと接続中
+      <button id="end-call">END CALL</button>
+    </p>
     <p><span id="message"></span></p>
   </div>
   <div id="image-container">
-    <img id="sentImage" src=""/>
+    <img id="sent-image" src=""/>
+    <button id="close-image">CLOSE</button>
   </div>
 </body>
 </html>

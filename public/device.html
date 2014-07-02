@@ -7,67 +7,7 @@
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8/jquery.min.js"></script>
   <script src="javascripts/peer.js"></script>
   <script src="javascripts/remote-monitor.js"></script>
-  <script>
-    $(function() {
-      var rm = new ns.RemoteMonitor();
-
-      function peerIDsetting(id) {
-        $('#device-id').text(id);
-      }
-      function allhide() {
-        $('#initialize').hide();
-        $('#peerid-container').hide();
-        $('#monitor-video').hide();
-        $('#device-video').hide();
-        $('#connecting').hide();
-        $('#image-container').hide();
-      }
-      function initializing() {
-        allhide();
-        $('#initialize').show();
-      }
-      function waiting() {
-        allhide();
-        $('#peerid-container').show();
-      }
-      function connecting() {
-        allhide();
-        $('#connecting').show();
-      }
-      function showError(errmessage) {
-        alert(errmessage);
-      }
-      function showMessage(message) {
-        $('#message').text(message);
-      }
-      function showImage(image) {
-        $('#sent-image')[0].src = image;
-        $('#connecting').hide();
-        $('#image-container').show();
-      }
-
-      $('#end-call').click(function() {
-        rm.closeCall();
-        waiting();
-      });
-      $('#close-image').click(function() {
-        $('#sent-image')[0].src = "";
-        $('#image-container').hide();
-        $('#connecting').show();
-      });
-      $('#terminate').click(function() {
-        rm.terminate();
-        window.open('about:blank', '_self').close();
-      });
-
-      rm.onOpen(peerIDsetting);
-      rm.onError(showError, waiting);
-      rm.onConnection(showMessage, showImage);
-      rm.onCall($('#monitor-video'), connecting, waiting);
-
-      rm.initialize($('#device-video'), initializing, waiting);
-    });
-  </script>
+  <script src="javascripts/device.js"></script>
 </head>
 <body>
   <div id="initialize" class="text">

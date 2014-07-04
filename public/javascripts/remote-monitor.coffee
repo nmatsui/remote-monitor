@@ -10,6 +10,10 @@ ns = do ->
     constructor: ->
       console.log "constructor of BaseClass"
       @peer = new Peer {host:HOST, port:PORT, path:PATH, debug:DEBUG}
+      @ls = null
+      @emc = null
+      @edc = null
+      @eh = null
   
     initialize: (video, initializing, waiting) ->
       console.log "initialize"
@@ -26,33 +30,37 @@ ns = do ->
         waiting()
       , =>
         console.log "getUserMedia fail"
-        console.log "ビデオカメラとマイクへのアクセスに失敗しました"
+        @eh "getUserMedia fail" if @eh?
 
     onError: (showError, waiting) ->
       console.log "onError"
+      @eh = showError
       @peer.on 'error', (err) =>
         console.log "peer.error: #{err.message}"
-        showError(err.message)
+        @eh "peer.error: #{err.message}" if @eh?
         waiting()
 
     closeCall: ->
       console.log "closeCall"
-      @ec.close()
+      @emc.close() if @emc?
+      @edc.close() if @edc?
   
     terminate: ->
       console.log "terminate"
-      @peer.destroy()
+      @emc.close() if @emc?
+      @edc.close() if @edc?
+      @peer.destroy() if @peer?
   
-    __connect: (call, video, waiting) ->
+    __connect: (mediaConnection, video, waiting) ->
       console.log "__connect"
-      @ec.close() if @ec?
-      call.on 'stream', (stream) =>
-        console.log "call.stream"
+      @emc.close() if @emc?
+      mediaConnection.on 'stream', (stream) =>
+        console.log "mediaConnection.stream"
         video.prop 'src', URL.createObjectURL(stream)
-      call.on 'close', ->
-        console.log "call.close"
+      mediaConnection.on 'close', ->
+        console.log "mediaConnection.close"
         waiting()
-      @ec = call
+      @emc = mediaConnection
 
   class exports.MonitorClass extends BaseClass
     constructor: ->
@@ -62,8 +70,18 @@ ns = do ->
     makeCall: (callto, video, connecting, waiting) ->
       console.log "makeCall : #{callto}"
       @callto = callto
-      call = @peer.call callto, @ls
-      @__connect call, video, waiting
+      
+      mediaConnection = @peer.call callto, @ls
+      @__connect mediaConnection, video, waiting
+
+      dataConnection = @peer.connect callto, {reliable: true}
+      dataConnection.on 'open', =>
+        console.log "dataConnection.open"
+        @edc.close() if @edc?
+        @edc = dataConnection
+      dataConnection.on 'close', ->
+        console.log "dataConnection.close"
+
       connecting()
   
     toggleMIC: ->
@@ -86,10 +104,12 @@ ns = do ->
 
     __send: (data) ->
       head = if data.length < 20 then data else "#{data.substring 0, 20}..."
-      conn = @peer.connect @callto, {reliable: true}
-      conn.on 'open', =>
-        conn.send data
+      if @edc? and @edc.open
+        @edc.send(data)
         console.log "sent data:#{head}"
+      else
+        console.log "dataConnection is lost"
+        @eh "dataConnection is lost" if @eh?
 
   class exports.DeviceClass extends BaseClass
     constructor: ->
@@ -104,10 +124,12 @@ ns = do ->
   
     onConnection: (messageHandler = null, imageHandler = null)->
       console.log "onConnection"
-      @peer.on 'connection', (conn) =>
+      @peer.on 'connection', (dataConnection) =>
         console.log "peer.connection"
-        conn.on 'data', (data) =>
-          console.log "conn.data #{data}"
+        @edc.close if @edc?
+        @edc = dataConnection
+        @edc.on 'data', (data) =>
+          console.log "dataConnection.data #{data}"
 
           if /^event:(.*)/.exec data
             console.log "event received:#{RegExp.$1}"
@@ -123,10 +145,10 @@ ns = do ->
   
     onCall: (video, connecting, waiting) ->
       console.log "onCall"
-      @peer.on 'call', (call) =>
+      @peer.on 'call', (mediaConnection) =>
         console.log "peer.call"
-        call.answer @ls
-        @__connect call, video, waiting
+        mediaConnection.answer @ls
+        @__connect mediaConnection, video, waiting
         connecting()
   
     __eventHandler: (event) ->

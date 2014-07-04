@@ -118,5 +118,6 @@ $ ->
     drawing = false
     false
 
+  mc.onOpen()
   mc.onError(showError, waiting)
   mc.initialize($('#monitor-video'), initializing, waiting)

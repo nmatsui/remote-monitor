@@ -32,6 +32,12 @@ ns = do ->
         console.log "getUserMedia fail"
         @eh "getUserMedia fail" if @eh?
 
+    onOpen: (peerIDsetting = null) ->
+      console.log "onOpen"
+      @peer.on 'open', =>
+        console.log "peer.open peer.id=#{@peer.id}"
+        peerIDsetting(@peer.id) if peerIDsetting?
+  
     onError: (showError, waiting) ->
       console.log "onError"
       @eh = showError
@@ -116,12 +122,6 @@ ns = do ->
       console.log "constructor of DeviceClass"
       super()
 
-    onOpen: (peerIDsetting) ->
-      console.log "onOpen"
-      @peer.on 'open', =>
-        console.log "peer.open"
-        peerIDsetting(@peer.id)
-  
     onConnection: (messageHandler = null, imageHandler = null)->
       console.log "onConnection"
       @peer.on 'connection', (dataConnection) =>

@@ -50,6 +50,21 @@ ns = (function() {
       })(this));
     };
 
+    BaseClass.prototype.onOpen = function(peerIDsetting) {
+      if (peerIDsetting == null) {
+        peerIDsetting = null;
+      }
+      console.log("onOpen");
+      return this.peer.on('open', (function(_this) {
+        return function() {
+          console.log("peer.open peer.id=" + _this.peer.id);
+          if (peerIDsetting != null) {
+            return peerIDsetting(_this.peer.id);
+          }
+        };
+      })(this));
+    };
+
     BaseClass.prototype.onError = function(showError, waiting) {
       console.log("onError");
       this.eh = showError;
@@ -186,16 +201,6 @@ ns = (function() {
       console.log("constructor of DeviceClass");
       DeviceClass.__super__.constructor.call(this);
     }
-
-    DeviceClass.prototype.onOpen = function(peerIDsetting) {
-      console.log("onOpen");
-      return this.peer.on('open', (function(_this) {
-        return function() {
-          console.log("peer.open");
-          return peerIDsetting(_this.peer.id);
-        };
-      })(this));
-    };
 
     DeviceClass.prototype.onConnection = function(messageHandler, imageHandler) {
       if (messageHandler == null) {

@@ -50,7 +50,7 @@ $ ->
     window.open('about:blank', '_self').close()
 
   dc.onOpen(peerIDsetting)
+  dc.onError(showError, waiting)
   dc.onConnection(showMessage, showImage)
   dc.onCall($('#monitor-video'), connecting, waiting)
-  dc.onError(showError, waiting)
   dc.initialize($('#device-video'), initializing, waiting)

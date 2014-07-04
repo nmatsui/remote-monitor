@@ -19,6 +19,10 @@ ns = (function() {
         path: PATH,
         debug: DEBUG
       });
+      this.ls = null;
+      this.emc = null;
+      this.edc = null;
+      this.eh = null;
     }
 
     BaseClass.prototype.initialize = function(video, initializing, waiting) {
@@ -39,17 +43,22 @@ ns = (function() {
       })(this), (function(_this) {
         return function() {
           console.log("getUserMedia fail");
-          return console.log("ビデオカメラとマイクへのアクセスに失敗しました");
+          if (_this.eh != null) {
+            return _this.eh("getUserMedia fail");
+          }
         };
       })(this));
     };
 
     BaseClass.prototype.onError = function(showError, waiting) {
       console.log("onError");
+      this.eh = showError;
       return this.peer.on('error', (function(_this) {
         return function(err) {
           console.log("peer.error: " + err.message);
-          showError(err.message);
+          if (_this.eh != null) {
+            _this.eh("peer.error: " + err.message);
+          }
           return waiting();
         };
       })(this));
@@ -57,30 +66,43 @@ ns = (function() {
 
     BaseClass.prototype.closeCall = function() {
       console.log("closeCall");
-      return this.ec.close();
+      if (this.emc != null) {
+        this.emc.close();
+      }
+      if (this.edc != null) {
+        return this.edc.close();
+      }
     };
 
     BaseClass.prototype.terminate = function() {
       console.log("terminate");
-      return this.peer.destroy();
+      if (this.emc != null) {
+        this.emc.close();
+      }
+      if (this.edc != null) {
+        this.edc.close();
+      }
+      if (this.peer != null) {
+        return this.peer.destroy();
+      }
     };
 
-    BaseClass.prototype.__connect = function(call, video, waiting) {
+    BaseClass.prototype.__connect = function(mediaConnection, video, waiting) {
       console.log("__connect");
-      if (this.ec != null) {
-        this.ec.close();
+      if (this.emc != null) {
+        this.emc.close();
       }
-      call.on('stream', (function(_this) {
+      mediaConnection.on('stream', (function(_this) {
         return function(stream) {
-          console.log("call.stream");
+          console.log("mediaConnection.stream");
           return video.prop('src', URL.createObjectURL(stream));
         };
       })(this));
-      call.on('close', function() {
-        console.log("call.close");
+      mediaConnection.on('close', function() {
+        console.log("mediaConnection.close");
         return waiting();
       });
-      return this.ec = call;
+      return this.emc = mediaConnection;
     };
 
     return BaseClass;
@@ -95,11 +117,26 @@ ns = (function() {
     }
 
     MonitorClass.prototype.makeCall = function(callto, video, connecting, waiting) {
-      var call;
+      var dataConnection, mediaConnection;
       console.log("makeCall : " + callto);
       this.callto = callto;
-      call = this.peer.call(callto, this.ls);
-      this.__connect(call, video, waiting);
+      mediaConnection = this.peer.call(callto, this.ls);
+      this.__connect(mediaConnection, video, waiting);
+      dataConnection = this.peer.connect(callto, {
+        reliable: true
+      });
+      dataConnection.on('open', (function(_this) {
+        return function() {
+          console.log("dataConnection.open");
+          if (_this.edc != null) {
+            _this.edc.close();
+          }
+          return _this.edc = dataConnection;
+        };
+      })(this));
+      dataConnection.on('close', function() {
+        return console.log("dataConnection.close");
+      });
       return connecting();
     };
 
@@ -126,17 +163,17 @@ ns = (function() {
     };
 
     MonitorClass.prototype.__send = function(data) {
-      var conn, head;
+      var head;
       head = data.length < 20 ? data : "" + (data.substring(0, 20)) + "...";
-      conn = this.peer.connect(this.callto, {
-        reliable: true
-      });
-      return conn.on('open', (function(_this) {
-        return function() {
-          conn.send(data);
-          return console.log("sent data:" + head);
-        };
-      })(this));
+      if ((this.edc != null) && this.edc.open) {
+        this.edc.send(data);
+        return console.log("sent data:" + head);
+      } else {
+        console.log("dataConnection is lost");
+        if (this.eh != null) {
+          return this.eh("dataConnection is lost");
+        }
+      }
     };
 
     return MonitorClass;
@@ -169,10 +206,14 @@ ns = (function() {
       }
       console.log("onConnection");
       return this.peer.on('connection', (function(_this) {
-        return function(conn) {
+        return function(dataConnection) {
           console.log("peer.connection");
-          return conn.on('data', function(data) {
-            console.log("conn.data " + data);
+          if (_this.edc != null) {
+            _this.edc.close;
+          }
+          _this.edc = dataConnection;
+          return _this.edc.on('data', function(data) {
+            console.log("dataConnection.data " + data);
             if (/^event:(.*)/.exec(data)) {
               console.log("event received:" + RegExp.$1);
               return _this.__eventHandler(RegExp.$1);
@@ -197,10 +238,10 @@ ns = (function() {
     DeviceClass.prototype.onCall = function(video, connecting, waiting) {
       console.log("onCall");
       return this.peer.on('call', (function(_this) {
-        return function(call) {
+        return function(mediaConnection) {
           console.log("peer.call");
-          call.answer(_this.ls);
-          _this.__connect(call, video, waiting);
+          mediaConnection.answer(_this.ls);
+          _this.__connect(mediaConnection, video, waiting);
           return connecting();
         };
       })(this));

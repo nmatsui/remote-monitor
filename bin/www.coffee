@@ -9,3 +9,4 @@ PeerServer = require('peer').PeerServer
 new PeerServer
   port: 9000
   path: '/remote-monitor'
+  debug: true

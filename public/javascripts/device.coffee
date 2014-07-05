@@ -6,11 +6,10 @@ $ ->
   
   allhide = ->
     $('#initialize').hide()
-    $('#peerid-container').hide()
-    $('#monitor-video').hide()
-    $('#device-video').hide()
+    $('#waiting').hide()
     $('#connecting').hide()
-    $('#image-container').hide()
+    $('#image-viewing').hide()
+    $('#video-container').hide()
   
   initializing = ->
     allhide()
@@ -18,11 +17,19 @@ $ ->
   
   waiting = ->
     allhide()
-    $('#peerid-container').show()
+    $('#message').text("")
+    $('#waiting').show()
+    $('#terminate').focus()
   
   connecting = ->
     allhide()
     $('#connecting').show()
+    $('#end-call').focus()
+
+  imageViewing = ->
+    allhide()
+    $('#image-viewing').show()
+    $('#close-image').focus()
   
   showError = (errMessage) ->
     console.log "showError :#{errMessage}"
@@ -33,8 +40,7 @@ $ ->
   
   showImage = (image) ->
     $('#sent-image')[0].src = image
-    $('#connecting').hide()
-    $('#image-container').show()
+    imageViewing()
 
   $('#end-call').click ->
     dc.closeCall()
@@ -42,8 +48,7 @@ $ ->
   
   $('#close-image').click ->
     $('#sent-image')[0].src = ""
-    $('#image-container').hide()
-    $('#connecting').show()
+    connecting()
   
   $('#terminate').click ->
     dc.terminate()

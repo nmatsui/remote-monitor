@@ -3,31 +3,50 @@ $ ->
   LINE_COLOR = 'rgb(255, 0, 0)'
 
   mc = new ns.MonitorClass()
-  mic = false
-  cap = false
-  drawing = false
-  sx = 0
-  sy = 0
+  mic = null
+  cap = null
+  drawing = null
+  sx = null
+  sy = null
 
   allhide = ->
     $('#initialize').hide()
-    $('#makecall-form').hide()
-    $('#calling-form').hide()
+    $('#waiting').hide()
+    $('#connecting-form').hide()
     $('#device-video').hide()
     $('#monitor-video').hide()
     $('#capture-canvas').hide()
- 
+
   initializing = ->
     allhide()
     $('#initialize').show()
 
   waiting = ->
     allhide()
-    $('#makecall-form').show()
+    mic = false
+    cap = false
+    drawing = false
+    sx = 0
+    sy = 0
+    $('#toggle-mic').text('MIC ON')
+    $('#send-image').prop('disabled', true)
+    $('#toggle-capture').text('CAPTURE')
+    $('#message').val("")
+    $('#waiting').show()
+    $('#callto-id').focus()
 
   connecting = ->
     allhide()
+    $('#send-image').prop('disabled', true)
+    $('#toggle-capture').text('CAPTURE')
+    $('#connecting-form').show()
     $('#device-video').show()
+
+  capturing = ->
+    $('#send-image').prop('disabled', false)
+    $('#toggle-capture').text('LIVE')
+    $('#device-video').hide()
+    $('#capture-canvas').show()
   
   showError = (errMessage) ->
     console.log "showError :#{errMessage}"
@@ -43,13 +62,11 @@ $ ->
     calltoId = $('#callto-id').val()
     video = $('#device-video')
     mc.makeCall(calltoId, video, connecting, waiting)
-    $('#makecall-form').hide()
-    $('#calling-form').show()
+    connecting()
   
   $('#end-call').click ->
     mc.closeCall()
-    $('#calling-form').hide()
-    $('#makecall-form').show()
+    waiting()
   
   $('#toggle-mic').click ->
     mc.toggleMIC()
@@ -65,16 +82,9 @@ $ ->
       video = $('#device-video')[0]
       canvas = $('#capture-canvas')[0]
       captureVideo(video, canvas)
-
-      $('#device-video').hide()
-      $('#capture-canvas').show()
-      $('#send-image').prop('disabled', false)
-      $('#toggle-capture').text('LIVE')
+      capturing()
     else
-      $('#capture-canvas').hide()
-      $('#send-image').prop('disabled', true)
-      $('#device-video').show()
-      $('#toggle-capture').text('CAPTURE')
+      connecting()
   
   $('#send-message').click ->
     message = $('#message').val()

@@ -13,13 +13,9 @@
   <div id="initialize" class="text">
     <p>ビデオカメラとマイクを使います<br/>許可をクリックしてください</p>
   </div>
-  <div id="peerid-container" class="text">
+  <div id="waiting" class="text">
     <p>peerjsID:<br/><span id="device-id">...</span></p>
     <button id="terminate"><span class="text">TERMINATE</span></button>
-  </div>
-  <div id="video-container" class="center">
-    <video id="monitor-video" autoplay></video>
-    <video id="device-video" class="center" muted="true" autoplay></video>
   </div>
   <div id="connecting" class="text">
     <p>
@@ -28,9 +24,13 @@
     </p>
     <p><span id="message"></span></p>
   </div>
-  <div id="image-container">
+  <div id="image-viewing">
     <img id="sent-image" src=""/>
     <button id="close-image">CLOSE</button>
+  </div>
+  <div id="video-container" class="center">
+    <video id="monitor-video" autoplay></video>
+    <video id="device-video" class="center" muted="true" autoplay></video>
   </div>
 </body>
 </html>

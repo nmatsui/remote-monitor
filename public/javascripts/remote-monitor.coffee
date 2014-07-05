@@ -23,26 +23,26 @@ ns = do ->
                                navigator.mozGetUserMedia
       navigator.getUserMedia {audio:true, video:true}
       , (stream) =>
-        console.log "getUserMedia success"
+        console.log "getUserMedia SuccessCallback"
         video.prop 'src', URL.createObjectURL(stream)
         @ls = stream
         @ls.getAudioTracks()[0].enabled = false
         waiting()
       , =>
-        console.log "getUserMedia fail"
+        console.log "getUserMedia ErrorCollback"
         @eh "getUserMedia fail" if @eh?
 
     onOpen: (peerIDsetting = null) ->
       console.log "onOpen"
       @peer.on 'open', =>
-        console.log "peer.open peer.id=#{@peer.id}"
+        console.log "peer.on 'open' peer.id=#{@peer.id}"
         peerIDsetting(@peer.id) if peerIDsetting?
   
     onError: (showError, waiting) ->
       console.log "onError"
       @eh = showError
       @peer.on 'error', (err) =>
-        console.log "peer.error: #{err.message}"
+        console.log "peer.on 'error': #{err.message}"
         @eh "peer.error: #{err.message}" if @eh?
         waiting()
 
@@ -61,10 +61,11 @@ ns = do ->
       console.log "__connect"
       @emc.close() if @emc?
       mediaConnection.on 'stream', (stream) =>
-        console.log "mediaConnection.stream"
+        console.log "mediaConnection.on 'stream'"
         video.prop 'src', URL.createObjectURL(stream)
-      mediaConnection.on 'close', ->
-        console.log "mediaConnection.close"
+      mediaConnection.on 'close', =>
+        console.log "mediaConnection.on 'close'"
+        @ls.getAudioTracks()[0].enabled = false
         waiting()
       @emc = mediaConnection
 
@@ -82,11 +83,11 @@ ns = do ->
 
       dataConnection = @peer.connect callto, {reliable: true}
       dataConnection.on 'open', =>
-        console.log "dataConnection.open"
+        console.log "dataConnection.on 'open'"
         @edc.close() if @edc?
         @edc = dataConnection
       dataConnection.on 'close', ->
-        console.log "dataConnection.close"
+        console.log "dataConnection.on 'close'"
 
       connecting()
   
@@ -125,11 +126,11 @@ ns = do ->
     onConnection: (messageHandler = null, imageHandler = null)->
       console.log "onConnection"
       @peer.on 'connection', (dataConnection) =>
-        console.log "peer.connection"
+        console.log "peer.on 'connection'"
         @edc.close if @edc?
         @edc = dataConnection
         @edc.on 'data', (data) =>
-          console.log "dataConnection.data #{data}"
+          console.log "dataConnection.on 'data' #{data}"
 
           if /^event:(.*)/.exec data
             console.log "event received:#{RegExp.$1}"
@@ -142,11 +143,13 @@ ns = do ->
             imageHandler(RegExp.$1) if imageHandler
           else
             console.log "unknown data received:#{data}"
+        @edc.on 'close', =>
+          console.log "dataConnection.on 'close'"
   
     onCall: (video, connecting, waiting) ->
       console.log "onCall"
       @peer.on 'call', (mediaConnection) =>
-        console.log "peer.call"
+        console.log "peer.on 'call'"
         mediaConnection.answer @ls
         @__connect mediaConnection, video, waiting
         connecting()

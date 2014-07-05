@@ -13,25 +13,23 @@
   <div id="initialize" class="text">
     <p>ビデオカメラとマイクを使います<br/>許可をクリックしてください</p>
   </div>
-  <div id="caller" class="text">
-    <div id="makecall-form">
-      <p>デバイスのpeerjsIDを入力し、CALLしてください</p>
-      <input type="text" placeholder="peerjsID" id="callto-id"/>
-      <button id="make-call">CALL</button>
-      <br/>
-      <button id="terminate">TERMINATE</button>
-    </div>
-    <div id="calling-form">
-      <button id="end-call">END CALL</button>
-      <span class="separate">|</span>
-      <button id="toggle-mic">MIC ON</button>
-      <span class="separate">|</span>
-      <input type="text" placeholder="message" id="message"/>
-      <button id="send-message">SEND MESSAGE</button>
-      <span class="separate">|</span>
-      <button id="toggle-capture">CAPTURE</button>
-      <button id="send-image" disabled="true">SEND IMAGE</button>
-    </div>
+  <div id="waiting" class="text">
+    <p>デバイスのpeerjsIDを入力し、CALLしてください</p>
+    <input type="text" placeholder="peerjsID" id="callto-id"/>
+    <button id="make-call">CALL</button>
+    <br/>
+    <button id="terminate">TERMINATE</button>
+  </div>
+  <div id="connecting-form">
+    <button id="end-call">END CALL</button>
+    <span class="separate">|</span>
+    <button id="toggle-mic">MIC ON</button>
+    <span class="separate">|</span>
+    <input type="text" placeholder="message" id="message"/>
+    <button id="send-message">SEND MESSAGE</button>
+    <span class="separate">|</span>
+    <button id="toggle-capture">CAPTURE</button>
+    <button id="send-image" disabled="true">SEND IMAGE</button>
   </div>
   <div id="video-container">
     <video id="device-video" class="center" autoplay></video>

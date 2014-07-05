@@ -34,7 +34,7 @@ ns = (function() {
         video: true
       }, (function(_this) {
         return function(stream) {
-          console.log("getUserMedia success");
+          console.log("getUserMedia SuccessCallback");
           video.prop('src', URL.createObjectURL(stream));
           _this.ls = stream;
           _this.ls.getAudioTracks()[0].enabled = false;
@@ -42,7 +42,7 @@ ns = (function() {
         };
       })(this), (function(_this) {
         return function() {
-          console.log("getUserMedia fail");
+          console.log("getUserMedia ErrorCollback");
           if (_this.eh != null) {
             return _this.eh("getUserMedia fail");
           }
@@ -57,7 +57,7 @@ ns = (function() {
       console.log("onOpen");
       return this.peer.on('open', (function(_this) {
         return function() {
-          console.log("peer.open peer.id=" + _this.peer.id);
+          console.log("peer.on 'open' peer.id=" + _this.peer.id);
           if (peerIDsetting != null) {
             return peerIDsetting(_this.peer.id);
           }
@@ -70,7 +70,7 @@ ns = (function() {
       this.eh = showError;
       return this.peer.on('error', (function(_this) {
         return function(err) {
-          console.log("peer.error: " + err.message);
+          console.log("peer.on 'error': " + err.message);
           if (_this.eh != null) {
             _this.eh("peer.error: " + err.message);
           }
@@ -109,14 +109,17 @@ ns = (function() {
       }
       mediaConnection.on('stream', (function(_this) {
         return function(stream) {
-          console.log("mediaConnection.stream");
+          console.log("mediaConnection.on 'stream'");
           return video.prop('src', URL.createObjectURL(stream));
         };
       })(this));
-      mediaConnection.on('close', function() {
-        console.log("mediaConnection.close");
-        return waiting();
-      });
+      mediaConnection.on('close', (function(_this) {
+        return function() {
+          console.log("mediaConnection.on 'close'");
+          _this.ls.getAudioTracks()[0].enabled = false;
+          return waiting();
+        };
+      })(this));
       return this.emc = mediaConnection;
     };
 
@@ -142,7 +145,7 @@ ns = (function() {
       });
       dataConnection.on('open', (function(_this) {
         return function() {
-          console.log("dataConnection.open");
+          console.log("dataConnection.on 'open'");
           if (_this.edc != null) {
             _this.edc.close();
           }
@@ -150,7 +153,7 @@ ns = (function() {
         };
       })(this));
       dataConnection.on('close', function() {
-        return console.log("dataConnection.close");
+        return console.log("dataConnection.on 'close'");
       });
       return connecting();
     };
@@ -212,13 +215,13 @@ ns = (function() {
       console.log("onConnection");
       return this.peer.on('connection', (function(_this) {
         return function(dataConnection) {
-          console.log("peer.connection");
+          console.log("peer.on 'connection'");
           if (_this.edc != null) {
             _this.edc.close;
           }
           _this.edc = dataConnection;
-          return _this.edc.on('data', function(data) {
-            console.log("dataConnection.data " + data);
+          _this.edc.on('data', function(data) {
+            console.log("dataConnection.on 'data' " + data);
             if (/^event:(.*)/.exec(data)) {
               console.log("event received:" + RegExp.$1);
               return _this.__eventHandler(RegExp.$1);
@@ -236,6 +239,9 @@ ns = (function() {
               return console.log("unknown data received:" + data);
             }
           });
+          return _this.edc.on('close', function() {
+            return console.log("dataConnection.on 'close'");
+          });
         };
       })(this));
     };
@@ -244,7 +250,7 @@ ns = (function() {
       console.log("onCall");
       return this.peer.on('call', (function(_this) {
         return function(mediaConnection) {
-          console.log("peer.call");
+          console.log("peer.on 'call'");
           mediaConnection.answer(_this.ls);
           _this.__connect(mediaConnection, video, waiting);
           return connecting();

@@ -8,5 +8,5 @@ var server = app.listen(app.get('port'), function() {
   debug('Express server listening on port ' + server.address().port);
 });
 
-var PeerServer = require('peer').PeerServer;
-var peerServer = new PeerServer({port: 9000, path: '/remote-monitor', debug:true});
+var PeerServer = require('peer').PeerServer; // 追加
+var peerServer = new PeerServer({port: 9000, path: '/remote-monitor', debug:true}); // 追加

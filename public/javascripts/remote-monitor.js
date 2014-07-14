@@ -126,77 +126,6 @@ ns = (function() {
     return BaseClass;
 
   })();
-  exports.MonitorClass = (function(_super) {
-    __extends(MonitorClass, _super);
-
-    function MonitorClass() {
-      console.log("constructor of MonitorClass");
-      MonitorClass.__super__.constructor.call(this);
-    }
-
-    MonitorClass.prototype.makeCall = function(callto, video, connecting, waiting) {
-      var dataConnection, mediaConnection;
-      console.log("makeCall : " + callto);
-      this.callto = callto;
-      mediaConnection = this.peer.call(callto, this.ls);
-      this.__connect(mediaConnection, video, waiting);
-      dataConnection = this.peer.connect(callto, {
-        reliable: true
-      });
-      dataConnection.on('open', (function(_this) {
-        return function() {
-          console.log("dataConnection.on 'open'");
-          if (_this.edc != null) {
-            _this.edc.close();
-          }
-          return _this.edc = dataConnection;
-        };
-      })(this));
-      dataConnection.on('close', function() {
-        return console.log("dataConnection.on 'close'");
-      });
-      return connecting();
-    };
-
-    MonitorClass.prototype.toggleMIC = function() {
-      var state;
-      state = this.ls.getAudioTracks()[0].enabled;
-      console.log("toggleMIC state:" + state);
-      this.ls.getAudioTracks()[0].enabled = !state;
-      if (state) {
-        return this.__send("event:mic-off");
-      } else {
-        return this.__send("event:mic-on");
-      }
-    };
-
-    MonitorClass.prototype.sendMessage = function(message) {
-      console.log("sendMessage: " + message);
-      return this.__send("message:" + message);
-    };
-
-    MonitorClass.prototype.sendData = function(data) {
-      console.log("sendData: " + data);
-      return this.__send("data:" + data);
-    };
-
-    MonitorClass.prototype.__send = function(data) {
-      var head;
-      head = data.length < 20 ? data : "" + (data.substring(0, 20)) + "...";
-      if ((this.edc != null) && this.edc.open) {
-        this.edc.send(data);
-        return console.log("sent data:" + head);
-      } else {
-        console.log("dataConnection is lost");
-        if (this.eh != null) {
-          return this.eh("dataConnection is lost");
-        }
-      }
-    };
-
-    return MonitorClass;
-
-  })(BaseClass);
   exports.DeviceClass = (function(_super) {
     __extends(DeviceClass, _super);
 
@@ -273,6 +202,77 @@ ns = (function() {
     };
 
     return DeviceClass;
+
+  })(BaseClass);
+  exports.MonitorClass = (function(_super) {
+    __extends(MonitorClass, _super);
+
+    function MonitorClass() {
+      console.log("constructor of MonitorClass");
+      MonitorClass.__super__.constructor.call(this);
+    }
+
+    MonitorClass.prototype.makeCall = function(callto, video, connecting, waiting) {
+      var dataConnection, mediaConnection;
+      console.log("makeCall : " + callto);
+      this.callto = callto;
+      mediaConnection = this.peer.call(callto, this.ls);
+      this.__connect(mediaConnection, video, waiting);
+      dataConnection = this.peer.connect(callto, {
+        reliable: true
+      });
+      dataConnection.on('open', (function(_this) {
+        return function() {
+          console.log("dataConnection.on 'open'");
+          if (_this.edc != null) {
+            _this.edc.close();
+          }
+          return _this.edc = dataConnection;
+        };
+      })(this));
+      dataConnection.on('close', function() {
+        return console.log("dataConnection.on 'close'");
+      });
+      return connecting();
+    };
+
+    MonitorClass.prototype.toggleMIC = function() {
+      var state;
+      state = this.ls.getAudioTracks()[0].enabled;
+      console.log("toggleMIC state:" + state);
+      this.ls.getAudioTracks()[0].enabled = !state;
+      if (state) {
+        return this.__send("event:mic-off");
+      } else {
+        return this.__send("event:mic-on");
+      }
+    };
+
+    MonitorClass.prototype.sendMessage = function(message) {
+      console.log("sendMessage: " + message);
+      return this.__send("message:" + message);
+    };
+
+    MonitorClass.prototype.sendData = function(data) {
+      console.log("sendData: " + data);
+      return this.__send("data:" + data);
+    };
+
+    MonitorClass.prototype.__send = function(data) {
+      var head;
+      head = data.length < 20 ? data : "" + (data.substring(0, 20)) + "...";
+      if ((this.edc != null) && this.edc.open) {
+        this.edc.send(data);
+        return console.log("sent data:" + head);
+      } else {
+        console.log("dataConnection is lost");
+        if (this.eh != null) {
+          return this.eh("dataConnection is lost");
+        }
+      }
+    };
+
+    return MonitorClass;
 
   })(BaseClass);
   return exports;

@@ -1,12 +1,13 @@
 ns = do ->
   exports = {}
 
-  HOST  = '192.168.1.122'
-  PORT  = 9000
-  PATH  = '/remote-monitor'
+  HOST  = '192.168.1.122' # シグナリングサーバのIPアドレスやホスト名
+  PORT  = 9000 # シグナリングサーバが立ち上がっているポート
+  PATH  = '/remote-monitor' # シグナリングサーバ立ち上げ時に指定したAPI Prefix
   DEBUG = 3
 
   class BaseClass
+    # BaseClassの定義
     constructor: ->
       console.log "constructor of BaseClass"
       @peer = new Peer {host:HOST, port:PORT, path:PATH, debug:DEBUG}
@@ -69,7 +70,57 @@ ns = do ->
         waiting()
       @emc = mediaConnection
 
+  class exports.DeviceClass extends BaseClass
+    # BaseClassを継承したDeviceClassの定義
+    constructor: ->
+      console.log "constructor of DeviceClass"
+      super()
+
+    onConnection: (messageHandler = null, imageHandler = null)->
+      console.log "onConnection"
+      @peer.on 'connection', (dataConnection) =>
+        console.log "peer.on 'connection'"
+        @edc.close if @edc?
+        @edc = dataConnection
+        @edc.on 'data', (data) =>
+          console.log "dataConnection.on 'data' #{data}"
+
+          if /^event:(.*)/.exec data
+            console.log "event received:#{RegExp.$1}"
+            @__eventHandler(RegExp.$1)
+          else if /^message:(.*)/.exec data
+            console.log "message received:#{RegExp.$1}"
+            messageHandler(RegExp.$1) if messageHandler
+          else if /^data:(.*)/.exec data
+            console.log "data received:#{RegExp.$1}"
+            imageHandler(RegExp.$1) if imageHandler
+          else
+            console.log "unknown data received:#{data}"
+        @edc.on 'close', =>
+          console.log "dataConnection.on 'close'"
+  
+    onCall: (video, connecting, waiting) ->
+      console.log "onCall"
+      @peer.on 'call', (mediaConnection) =>
+        console.log "peer.on 'call'"
+        mediaConnection.answer @ls
+        @__connect mediaConnection, video, waiting
+        connecting()
+  
+    __eventHandler: (event) ->
+      console.log "__eventHandler event:#{event}"
+      switch event
+        when 'mic-on'
+          console.log "event: mic-on"
+          @ls.getAudioTracks()[0].enabled = true
+        when 'mic-off'
+          console.log "event: mic-off"
+          @ls.getAudioTracks()[0].enabled = false
+        else
+          console.log "event: unknown"
+
   class exports.MonitorClass extends BaseClass
+    # BaseClassを継承したMonitorClassの定義
     constructor: ->
       console.log "constructor of MonitorClass"
       super()
@@ -117,53 +168,5 @@ ns = do ->
       else
         console.log "dataConnection is lost"
         @eh "dataConnection is lost" if @eh?
-
-  class exports.DeviceClass extends BaseClass
-    constructor: ->
-      console.log "constructor of DeviceClass"
-      super()
-
-    onConnection: (messageHandler = null, imageHandler = null)->
-      console.log "onConnection"
-      @peer.on 'connection', (dataConnection) =>
-        console.log "peer.on 'connection'"
-        @edc.close if @edc?
-        @edc = dataConnection
-        @edc.on 'data', (data) =>
-          console.log "dataConnection.on 'data' #{data}"
-
-          if /^event:(.*)/.exec data
-            console.log "event received:#{RegExp.$1}"
-            @__eventHandler(RegExp.$1)
-          else if /^message:(.*)/.exec data
-            console.log "message received:#{RegExp.$1}"
-            messageHandler(RegExp.$1) if messageHandler
-          else if /^data:(.*)/.exec data
-            console.log "data received:#{RegExp.$1}"
-            imageHandler(RegExp.$1) if imageHandler
-          else
-            console.log "unknown data received:#{data}"
-        @edc.on 'close', =>
-          console.log "dataConnection.on 'close'"
-  
-    onCall: (video, connecting, waiting) ->
-      console.log "onCall"
-      @peer.on 'call', (mediaConnection) =>
-        console.log "peer.on 'call'"
-        mediaConnection.answer @ls
-        @__connect mediaConnection, video, waiting
-        connecting()
-  
-    __eventHandler: (event) ->
-      console.log "__eventHandler event:#{event}"
-      switch event
-        when 'mic-on'
-          console.log "event: mic-on"
-          @ls.getAudioTracks()[0].enabled = true
-        when 'mic-off'
-          console.log "event: mic-off"
-          @ls.getAudioTracks()[0].enabled = false
-        else
-          console.log "event: unknown"
 
   exports

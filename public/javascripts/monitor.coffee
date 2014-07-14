@@ -1,14 +1,17 @@
 $ ->
+  mc = new ns.MonitorClass() # MonitorClassのインスタンス化
+ 
+  ## ローカル変数の定義
   LINE_WIDTH = 2
   LINE_COLOR = 'rgb(255, 0, 0)'
 
-  mc = new ns.MonitorClass()
   mic = null
   cap = null
   drawing = null
   sx = null
   sy = null
 
+  ## 画面コンポーネントを操作するコールバック関数の定義
   allhide = ->
     $('#initialize').hide()
     $('#waiting').hide()
@@ -51,13 +54,8 @@ $ ->
   showError = (errMessage) ->
     console.log "showError :#{errMessage}"
     alert(errMessage)
-  
-  captureVideo = (video, canvas) ->
-    ctx = canvas.getContext('2d')
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-    ctx.drawImage(video, 0, 0)
 
+  ## ボタンクリック時の処理定義
   $('#make-call').click ->
     calltoId = $('#callto-id').val()
     video = $('#device-video')
@@ -98,6 +96,13 @@ $ ->
     mc.terminate()
     window.open('about:blank', '_self').close()
 
+  ## カメラ映像のキャプチャとフリーハンドでの指示を描く処理
+  captureVideo = (video, canvas) ->
+    ctx = canvas.getContext('2d')
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    ctx.drawImage(video, 0, 0)
+
   $('#capture-canvas').on 'mousedown', (e) ->
     drawing = true
     sx = e.pageX - $(this).offset().left
@@ -128,6 +133,9 @@ $ ->
     drawing = false
     false
 
+  ## MonitorClassの各種イベント処理へ画面コンポーネントを操作するコールバック関数を設定
   mc.onOpen()
   mc.onError(showError, waiting)
+
+  ## MediaStreamの初期化処理を呼び出す
   mc.initialize($('#monitor-video'), initializing, waiting)

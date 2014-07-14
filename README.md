@@ -10,8 +10,10 @@ The sample program of remote monitoring system using [PeerJS](http://peerjs.com/
 I was tested on the following devices:
 
 * Google Chrome 35.0.1916.153 / Mac OS X 10.7.5 / Macbook Air Mid 2011
-* Google Chrome for Android 35.0.1916.141 / Android 4.2.2 / HTL22
 * Google Chrome for Android 35.0.1916.141 / Android 4.0.4 / Vuzix M100
+* Google Chrome for Android 35.0.1916.141 / Android 4.2.2 / HTL22
+* Firefox for Android 30.0 / Android 4.2.2 / HTL22
+* Opera for Android 22.0.1485.78487 / Android 4.2.2 / HTL22
 
 Unfortunately, you cannot use "Google Play" on Vuzix M100. So you have to install "Google Chrome for Android" by using `adb install`.  
 (The VenderID of Vuzix M100 is "0x1bae".)

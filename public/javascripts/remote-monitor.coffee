@@ -61,6 +61,7 @@ ns = do ->
     __connect: (mediaConnection, video, waiting) ->
       console.log "__connect"
       @emc.close() if @emc?
+      @emc = mediaConnection
       mediaConnection.on 'stream', (stream) =>
         console.log "mediaConnection.on 'stream'"
         video.prop 'src', URL.createObjectURL(stream)
@@ -68,7 +69,6 @@ ns = do ->
         console.log "mediaConnection.on 'close'"
         @ls.getAudioTracks()[0].enabled = false
         waiting()
-      @emc = mediaConnection
 
   class exports.DeviceClass extends BaseClass
     # BaseClassを継承したDeviceClassの定義
@@ -76,15 +76,24 @@ ns = do ->
       console.log "constructor of DeviceClass"
       super()
 
+    onCall: (video, connecting, waiting) ->
+      console.log "onCall"
+      @peer.on 'call', (mediaConnection) =>
+        console.log "peer.on 'call'"
+        mediaConnection.answer @ls
+        @__connect mediaConnection, video, waiting
+        connecting()
+  
     onConnection: (messageHandler = null, imageHandler = null)->
       console.log "onConnection"
       @peer.on 'connection', (dataConnection) =>
         console.log "peer.on 'connection'"
-        @edc.close if @edc?
-        @edc = dataConnection
-        @edc.on 'data', (data) =>
+        dataConnection.on 'open', =>
+          console.log "dataConnection.on 'open'"
+          @edc.close() if @edc?
+          @edc = dataConnection
+        dataConnection.on 'data', (data) =>
           console.log "dataConnection.on 'data' #{data}"
-
           if /^event:(.*)/.exec data
             console.log "event received:#{RegExp.$1}"
             @__eventHandler(RegExp.$1)
@@ -96,16 +105,8 @@ ns = do ->
             imageHandler(RegExp.$1) if imageHandler
           else
             console.log "unknown data received:#{data}"
-        @edc.on 'close', =>
+        dataConnection.on 'close', =>
           console.log "dataConnection.on 'close'"
-  
-    onCall: (video, connecting, waiting) ->
-      console.log "onCall"
-      @peer.on 'call', (mediaConnection) =>
-        console.log "peer.on 'call'"
-        mediaConnection.answer @ls
-        @__connect mediaConnection, video, waiting
-        connecting()
   
     __eventHandler: (event) ->
       console.log "__eventHandler event:#{event}"

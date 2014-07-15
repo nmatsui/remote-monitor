@@ -107,20 +107,20 @@ ns = (function() {
       if (this.emc != null) {
         this.emc.close();
       }
+      this.emc = mediaConnection;
       mediaConnection.on('stream', (function(_this) {
         return function(stream) {
           console.log("mediaConnection.on 'stream'");
           return video.prop('src', URL.createObjectURL(stream));
         };
       })(this));
-      mediaConnection.on('close', (function(_this) {
+      return mediaConnection.on('close', (function(_this) {
         return function() {
           console.log("mediaConnection.on 'close'");
           _this.ls.getAudioTracks()[0].enabled = false;
           return waiting();
         };
       })(this));
-      return this.emc = mediaConnection;
     };
 
     return BaseClass;
@@ -134,6 +134,18 @@ ns = (function() {
       DeviceClass.__super__.constructor.call(this);
     }
 
+    DeviceClass.prototype.onCall = function(video, connecting, waiting) {
+      console.log("onCall");
+      return this.peer.on('call', (function(_this) {
+        return function(mediaConnection) {
+          console.log("peer.on 'call'");
+          mediaConnection.answer(_this.ls);
+          _this.__connect(mediaConnection, video, waiting);
+          return connecting();
+        };
+      })(this));
+    };
+
     DeviceClass.prototype.onConnection = function(messageHandler, imageHandler) {
       if (messageHandler == null) {
         messageHandler = null;
@@ -145,11 +157,14 @@ ns = (function() {
       return this.peer.on('connection', (function(_this) {
         return function(dataConnection) {
           console.log("peer.on 'connection'");
-          if (_this.edc != null) {
-            _this.edc.close;
-          }
-          _this.edc = dataConnection;
-          _this.edc.on('data', function(data) {
+          dataConnection.on('open', function() {
+            console.log("dataConnection.on 'open'");
+            if (_this.edc != null) {
+              _this.edc.close();
+            }
+            return _this.edc = dataConnection;
+          });
+          dataConnection.on('data', function(data) {
             console.log("dataConnection.on 'data' " + data);
             if (/^event:(.*)/.exec(data)) {
               console.log("event received:" + RegExp.$1);
@@ -168,21 +183,9 @@ ns = (function() {
               return console.log("unknown data received:" + data);
             }
           });
-          return _this.edc.on('close', function() {
+          return dataConnection.on('close', function() {
             return console.log("dataConnection.on 'close'");
           });
-        };
-      })(this));
-    };
-
-    DeviceClass.prototype.onCall = function(video, connecting, waiting) {
-      console.log("onCall");
-      return this.peer.on('call', (function(_this) {
-        return function(mediaConnection) {
-          console.log("peer.on 'call'");
-          mediaConnection.answer(_this.ls);
-          _this.__connect(mediaConnection, video, waiting);
-          return connecting();
         };
       })(this));
     };

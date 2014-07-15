@@ -60,7 +60,6 @@ $ ->
     calltoId = $('#callto-id').val()
     video = $('#device-video')
     mc.makeCall(calltoId, video, connecting, waiting)
-    connecting()
   
   $('#end-call').click ->
     mc.closeCall()

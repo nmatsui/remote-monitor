@@ -19,17 +19,21 @@ ns = do ->
     initialize: (video, initializing, waiting) ->
       console.log "initialize"
       initializing()
+      # getUserMediaのブラウザ間際の吸収
       navigator.getUserMedia = navigator.getUserMedia ||
                                navigator.webkitGetUserMedia ||
                                navigator.mozGetUserMedia
+      # MediaStreamの取得
       navigator.getUserMedia {audio:true, video:true}
       , (stream) =>
+        # MediaStreamの取得に成功
         console.log "getUserMedia SuccessCallback"
         video.prop 'src', URL.createObjectURL(stream)
         @ls = stream
         @ls.getAudioTracks()[0].enabled = false
         waiting()
       , =>
+        # MediaStreamの取得に失敗
         console.log "getUserMedia ErrorCollback"
         @eh "getUserMedia fail" if @eh?
 
@@ -58,13 +62,16 @@ ns = do ->
       @edc.close() if @edc?
       @peer.destroy() if @peer?
   
-    __connect: (mediaConnection, video, waiting) ->
+    __connect: (mediaConnection, video, connecting, waiting) ->
       console.log "__connect"
       @emc.close() if @emc?
       @emc = mediaConnection
+
+      # MediaConnectionのイベント処理
       mediaConnection.on 'stream', (stream) =>
         console.log "mediaConnection.on 'stream'"
         video.prop 'src', URL.createObjectURL(stream)
+        connecting()
       mediaConnection.on 'close', =>
         console.log "mediaConnection.on 'close'"
         @ls.getAudioTracks()[0].enabled = false
@@ -81,18 +88,20 @@ ns = do ->
       @peer.on 'call', (mediaConnection) =>
         console.log "peer.on 'call'"
         mediaConnection.answer @ls
-        @__connect mediaConnection, video, waiting
-        connecting()
+        @__connect mediaConnection, video, connecting, waiting
   
     onConnection: (messageHandler = null, imageHandler = null)->
       console.log "onConnection"
       @peer.on 'connection', (dataConnection) =>
+        # DataConnectionが確立した際の処理
         console.log "peer.on 'connection'"
         dataConnection.on 'open', =>
+          # DataConnectionが利用可能となった際の処理
           console.log "dataConnection.on 'open'"
           @edc.close() if @edc?
           @edc = dataConnection
         dataConnection.on 'data', (data) =>
+          # 接続相手先からデータを受信した際の処理
           console.log "dataConnection.on 'data' #{data}"
           if /^event:(.*)/.exec data
             console.log "event received:#{RegExp.$1}"
@@ -106,6 +115,7 @@ ns = do ->
           else
             console.log "unknown data received:#{data}"
         dataConnection.on 'close', =>
+          # DataConnectionの接続が切断された際の処理
           console.log "dataConnection.on 'close'"
   
     __eventHandler: (event) ->
@@ -129,19 +139,23 @@ ns = do ->
     makeCall: (callto, video, connecting, waiting) ->
       console.log "makeCall : #{callto}"
       @callto = callto
-      
+     
+      # MediaConnectionの接続要求処理
       mediaConnection = @peer.call callto, @ls
-      @__connect mediaConnection, video, waiting
+      @__connect mediaConnection, video, connecting, waiting
 
+      # DataConnectionの接続要求処理
       dataConnection = @peer.connect callto, {reliable: true}
+
+      # DataConnectionのイベント処理
       dataConnection.on 'open', =>
+        # DataConnectionが利用可能となった際の処理
         console.log "dataConnection.on 'open'"
         @edc.close() if @edc?
         @edc = dataConnection
       dataConnection.on 'close', ->
+        # DataConnectionが切断された際の処理
         console.log "dataConnection.on 'close'"
-
-      connecting()
   
     toggleMIC: ->
       state = @ls.getAudioTracks()[0].enabled

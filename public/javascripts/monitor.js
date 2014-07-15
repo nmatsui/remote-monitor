@@ -57,8 +57,7 @@
       var calltoId, video;
       calltoId = $('#callto-id').val();
       video = $('#device-video');
-      mc.makeCall(calltoId, video, connecting, waiting);
-      return connecting();
+      return mc.makeCall(calltoId, video, connecting, waiting);
     });
     $('#end-call').click(function() {
       mc.closeCall();

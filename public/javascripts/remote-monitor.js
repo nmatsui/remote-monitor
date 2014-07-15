@@ -102,7 +102,7 @@ ns = (function() {
       }
     };
 
-    BaseClass.prototype.__connect = function(mediaConnection, video, waiting) {
+    BaseClass.prototype.__connect = function(mediaConnection, video, connecting, waiting) {
       console.log("__connect");
       if (this.emc != null) {
         this.emc.close();
@@ -111,7 +111,8 @@ ns = (function() {
       mediaConnection.on('stream', (function(_this) {
         return function(stream) {
           console.log("mediaConnection.on 'stream'");
-          return video.prop('src', URL.createObjectURL(stream));
+          video.prop('src', URL.createObjectURL(stream));
+          return connecting();
         };
       })(this));
       return mediaConnection.on('close', (function(_this) {
@@ -140,8 +141,7 @@ ns = (function() {
         return function(mediaConnection) {
           console.log("peer.on 'call'");
           mediaConnection.answer(_this.ls);
-          _this.__connect(mediaConnection, video, waiting);
-          return connecting();
+          return _this.__connect(mediaConnection, video, connecting, waiting);
         };
       })(this));
     };
@@ -220,7 +220,7 @@ ns = (function() {
       console.log("makeCall : " + callto);
       this.callto = callto;
       mediaConnection = this.peer.call(callto, this.ls);
-      this.__connect(mediaConnection, video, waiting);
+      this.__connect(mediaConnection, video, connecting, waiting);
       dataConnection = this.peer.connect(callto, {
         reliable: true
       });
@@ -233,10 +233,9 @@ ns = (function() {
           return _this.edc = dataConnection;
         };
       })(this));
-      dataConnection.on('close', function() {
+      return dataConnection.on('close', function() {
         return console.log("dataConnection.on 'close'");
       });
-      return connecting();
     };
 
     MonitorClass.prototype.toggleMIC = function() {

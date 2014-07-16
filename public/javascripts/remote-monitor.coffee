@@ -6,6 +6,15 @@ ns = do ->
   PATH  = '/remote-monitor' # シグナリングサーバ立ち上げ時に指定したAPI Prefix
   DEBUG = 3
 
+  TYPE =
+    event:  "event"
+    message:"message"
+    image:  "image"
+  EVENT =
+    mic:
+      on:  "mic-on"
+      off: "mic-off"
+
   class BaseClass
     # BaseClassの定義
     constructor: ->
@@ -104,18 +113,19 @@ ns = do ->
           @edc = dataConnection
         dataConnection.on 'data', (data) =>
           # 接続相手先からデータを受信した際の処理
-          console.log "dataConnection.on 'data' #{data}"
-          if /^event:(.*)/.exec data
-            console.log "event received:#{RegExp.$1}"
-            @__eventHandler(RegExp.$1)
-          else if /^message:(.*)/.exec data
-            console.log "message received:#{RegExp.$1}"
-            messageHandler(RegExp.$1) if messageHandler
-          else if /^data:(.*)/.exec data
-            console.log "data received:#{RegExp.$1}"
-            imageHandler(RegExp.$1) if imageHandler
-          else
-            console.log "unknown data received:#{data}"
+          console.log "dataConnection.on 'data' #{JSON.stringify data}"
+          switch data.type
+            when TYPE.event
+              console.log "event received:#{data.payload}"
+              @__eventHandler data.payload
+            when TYPE.message
+              console.log "message received:#{data.payload}"
+              messageHandler data.payload if messageHandler
+            when TYPE.image
+              console.log "image received:#{data.payload}"
+              imageHandler data.payload if imageHandler
+            else
+              console.log "unknown data type"
         dataConnection.on 'close', =>
           # DataConnectionの接続が切断された際の処理
           console.log "dataConnection.on 'close'"
@@ -123,10 +133,10 @@ ns = do ->
     __eventHandler: (event) ->
       console.log "__eventHandler event:#{event}"
       switch event
-        when 'mic-on'
+        when EVENT.mic.on
           console.log "event: mic-on"
           @ls.getAudioTracks()[0].enabled = true
-        when 'mic-off'
+        when EVENT.mic.off
           console.log "event: mic-off"
           @ls.getAudioTracks()[0].enabled = false
         else
@@ -165,23 +175,23 @@ ns = do ->
       @ls.getAudioTracks()[0].enabled = !state
 
       if state
-        @__send "event:mic-off"
+        @__send TYPE.event, EVENT.mic.off
       else
-        @__send "event:mic-on"
+        @__send TYPE.event, EVENT.mic.on
 
     sendMessage: (message) ->
       console.log "sendMessage: #{message}"
-      @__send "message:#{message}"
+      @__send TYPE.message, message
 
-    sendData: (data) ->
-      console.log "sendData: #{data}"
-      @__send "data:#{data}"
+    sendImage: (image) ->
+      console.log "sendImage: #{image}"
+      @__send TYPE.image, image
 
-    __send: (data) ->
-      head = if data.length < 20 then data else "#{data.substring 0, 20}..."
+    __send: (type, payload) ->
       if @edc? and @edc.open
-        @edc.send(data)
-        console.log "sent data:#{head}"
+        data = {type:type, payload:payload}
+        @edc.send data
+        console.log "sent object:#{JSON.stringify data}"
       else
         console.log "dataConnection is lost"
         @eh "dataConnection is lost" if @eh?

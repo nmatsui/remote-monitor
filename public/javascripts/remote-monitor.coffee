@@ -69,10 +69,12 @@ ns = do ->
 
       # MediaConnectionのイベント処理
       mediaConnection.on 'stream', (stream) =>
+        # 接続相手先のMediaStreamが利用可能となった際の処理
         console.log "mediaConnection.on 'stream'"
         video.prop 'src', URL.createObjectURL(stream)
         connecting()
       mediaConnection.on 'close', =>
+        # 自分もしくは接続相手先がMediaConnectionを切断した際の処理
         console.log "mediaConnection.on 'close'"
         @ls.getAudioTracks()[0].enabled = false
         waiting()

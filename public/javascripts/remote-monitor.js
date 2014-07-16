@@ -4,12 +4,23 @@ var ns,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 ns = (function() {
-  var BaseClass, DEBUG, HOST, PATH, PORT, exports;
+  var BaseClass, DEBUG, EVENT, HOST, PATH, PORT, TYPE, exports;
   exports = {};
   HOST = '192.168.1.122';
   PORT = 9000;
   PATH = '/remote-monitor';
   DEBUG = 3;
+  TYPE = {
+    event: "event",
+    message: "message",
+    image: "image"
+  };
+  EVENT = {
+    mic: {
+      on: "mic-on",
+      off: "mic-off"
+    }
+  };
   BaseClass = (function() {
     function BaseClass() {
       console.log("constructor of BaseClass");
@@ -165,22 +176,25 @@ ns = (function() {
             return _this.edc = dataConnection;
           });
           dataConnection.on('data', function(data) {
-            console.log("dataConnection.on 'data' " + data);
-            if (/^event:(.*)/.exec(data)) {
-              console.log("event received:" + RegExp.$1);
-              return _this.__eventHandler(RegExp.$1);
-            } else if (/^message:(.*)/.exec(data)) {
-              console.log("message received:" + RegExp.$1);
-              if (messageHandler) {
-                return messageHandler(RegExp.$1);
-              }
-            } else if (/^data:(.*)/.exec(data)) {
-              console.log("data received:" + RegExp.$1);
-              if (imageHandler) {
-                return imageHandler(RegExp.$1);
-              }
-            } else {
-              return console.log("unknown data received:" + data);
+            console.log("dataConnection.on 'data' " + (JSON.stringify(data)));
+            switch (data.type) {
+              case TYPE.event:
+                console.log("event received:" + data.payload);
+                return _this.__eventHandler(data.payload);
+              case TYPE.message:
+                console.log("message received:" + data.payload);
+                if (messageHandler) {
+                  return messageHandler(data.payload);
+                }
+                break;
+              case TYPE.image:
+                console.log("image received:" + data.payload);
+                if (imageHandler) {
+                  return imageHandler(data.payload);
+                }
+                break;
+              default:
+                return console.log("unknown data type");
             }
           });
           return dataConnection.on('close', function() {
@@ -193,10 +207,10 @@ ns = (function() {
     DeviceClass.prototype.__eventHandler = function(event) {
       console.log("__eventHandler event:" + event);
       switch (event) {
-        case 'mic-on':
+        case EVENT.mic.on:
           console.log("event: mic-on");
           return this.ls.getAudioTracks()[0].enabled = true;
-        case 'mic-off':
+        case EVENT.mic.off:
           console.log("event: mic-off");
           return this.ls.getAudioTracks()[0].enabled = false;
         default:
@@ -244,28 +258,31 @@ ns = (function() {
       console.log("toggleMIC state:" + state);
       this.ls.getAudioTracks()[0].enabled = !state;
       if (state) {
-        return this.__send("event:mic-off");
+        return this.__send(TYPE.event, EVENT.mic.off);
       } else {
-        return this.__send("event:mic-on");
+        return this.__send(TYPE.event, EVENT.mic.on);
       }
     };
 
     MonitorClass.prototype.sendMessage = function(message) {
       console.log("sendMessage: " + message);
-      return this.__send("message:" + message);
+      return this.__send(TYPE.message, message);
     };
 
-    MonitorClass.prototype.sendData = function(data) {
-      console.log("sendData: " + data);
-      return this.__send("data:" + data);
+    MonitorClass.prototype.sendImage = function(image) {
+      console.log("sendImage: " + image);
+      return this.__send(TYPE.image, image);
     };
 
-    MonitorClass.prototype.__send = function(data) {
-      var head;
-      head = data.length < 20 ? data : "" + (data.substring(0, 20)) + "...";
+    MonitorClass.prototype.__send = function(type, payload) {
+      var data;
       if ((this.edc != null) && this.edc.open) {
+        data = {
+          type: type,
+          payload: payload
+        };
         this.edc.send(data);
-        return console.log("sent data:" + head);
+        return console.log("sent object:" + (JSON.stringify(data)));
       } else {
         console.log("dataConnection is lost");
         if (this.eh != null) {

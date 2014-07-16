@@ -88,8 +88,8 @@ $ ->
     mc.sendMessage(message)
   
   $('#send-image').click ->
-    data = $('#capture-canvas')[0].toDataURL('image/png')
-    mc.sendData(data)
+    image = $('#capture-canvas')[0].toDataURL('image/png')
+    mc.sendImage(image)
   
   $('#terminate').click ->
     mc.terminate()

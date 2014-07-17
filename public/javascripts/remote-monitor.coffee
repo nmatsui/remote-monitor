@@ -6,10 +6,13 @@ ns = do ->
   PATH  = '/remote-monitor' # シグナリングサーバ立ち上げ時に指定したAPI Prefix
   DEBUG = 3
 
+  # DataConnection経由で転送されるデータの種類
   TYPE =
     event:  "event"
     message:"message"
     image:  "image"
+
+  # DataConnection経由で指示されるイベント
   EVENT =
     mic:
       on:  "mic-on"
@@ -116,30 +119,38 @@ ns = do ->
           console.log "dataConnection.on 'data' #{JSON.stringify data}"
           switch data.type
             when TYPE.event
+              # イベント受信時は、__eventHandlerに処理を委譲
               console.log "event received:#{data.payload}"
               @__eventHandler data.payload
             when TYPE.message
+              # テキストメッセージ受信時は、device.coffeeから渡されるmessageHandlerへ処理を委譲
               console.log "message received:#{data.payload}"
               messageHandler data.payload if messageHandler
             when TYPE.image
+              # 画像受信時は、device.coffeeから渡されるimageHandlerへ処理を委譲
               console.log "image received:#{data.payload}"
               imageHandler data.payload if imageHandler
             else
+              # 上記以外のtypeの場合は何もしない
               console.log "unknown data type"
         dataConnection.on 'close', =>
           # DataConnectionの接続が切断された際の処理
           console.log "dataConnection.on 'close'"
   
     __eventHandler: (event) ->
+      # イベント受信時の処理
       console.log "__eventHandler event:#{event}"
       switch event
         when EVENT.mic.on
+          # マイクONイベントを受信
           console.log "event: mic-on"
           @ls.getAudioTracks()[0].enabled = true
         when EVENT.mic.off
+          # マイクOFFイベントを受信
           console.log "event: mic-off"
           @ls.getAudioTracks()[0].enabled = false
         else
+          # 上記以外のイベントを受信した場合は何もしない
           console.log "event: unknown"
 
   class exports.MonitorClass extends BaseClass
@@ -170,6 +181,7 @@ ns = do ->
         console.log "dataConnection.on 'close'"
   
     toggleMIC: ->
+      # マイクON/OFFのイベント送信
       state = @ls.getAudioTracks()[0].enabled
       console.log "toggleMIC state:#{state}"
       @ls.getAudioTracks()[0].enabled = !state
@@ -180,19 +192,24 @@ ns = do ->
         @__send TYPE.event, EVENT.mic.on
 
     sendMessage: (message) ->
+      # テキストメッセージの送信
       console.log "sendMessage: #{message}"
       @__send TYPE.message, message
 
     sendImage: (image) ->
+      # 画像の送信
       console.log "sendImage: #{image}"
       @__send TYPE.image, image
 
     __send: (type, payload) ->
+      # 送信処理
       if @edc? and @edc.open
+        # DataConnectionが確立し利用可能な場合はデータを送信
         data = {type:type, payload:payload}
         @edc.send data
         console.log "sent object:#{JSON.stringify data}"
       else
+        # 何らかの理由でDataConnectionが利用できない場合はエラー発生
         console.log "dataConnection is lost"
         @eh "dataConnection is lost" if @eh?
 

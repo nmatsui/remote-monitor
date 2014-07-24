@@ -1,6 +1,6 @@
 {
   "name": "remote-monitor",
-  "version": "0.0.2b",
+  "version": "0.0.2c",
   "private": true,
   "scripts": {
     "start": "node ./bin/www"

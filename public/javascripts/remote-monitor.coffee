@@ -2,6 +2,10 @@ HOST  = '192.168.1.122' # シグナリングサーバのIPアドレスやホス�
 PORT  = 9000 # シグナリングサーバが立ち上がっているポート
 PATH  = '/remote-monitor' # シグナリングサーバ立ち上げ時に指定したAPI Prefix
 DEBUG = 3
+CONF  = 
+  iceServers:
+    [{ url: 'stun:stun.l.google.com:19302' },
+     { url: 'turn:homeo@turn.bistri.com:80', credential: 'homeo' }]
 
 this.ns = {}
 
@@ -21,7 +25,8 @@ class BaseClass
   # BaseClassの定義
   constructor: ->
     console.log "constructor of BaseClass"
-    @peer = new Peer {host:HOST, port:PORT, path:PATH, debug:DEBUG}
+    @peer = new Peer {host:HOST, port:PORT, path:PATH, debug:DEBUG, config:CONF}
+    #@peer = new Peer {host:HOST, port:PORT, path:PATH, debug:DEBUG}
     @ls = null
     @emc = null
     @edc = null

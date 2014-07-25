@@ -78,8 +78,8 @@ class BaseClass
     @edc.close() if @edc?
     @peer.destroy() if @peer?
 
-  __connect: (mediaConnection, video, connecting, waiting) ->
-    console.log "__connect"
+  connect: (mediaConnection, video, connecting, waiting) ->
+    console.log "connect"
     @emc.close() if @emc?
     @emc = mediaConnection
 
@@ -93,9 +93,10 @@ class BaseClass
       # 自分もしくは接続相手先がMediaConnectionを切断した際の処理
       console.log "mediaConnection.on 'close'"
       @ls.getAudioTracks()[0].enabled = false
+      @ems.close() if @ems?
       waiting()
 
-class ns.DeviceClass extends BaseClass
+class DeviceClass extends BaseClass
   # BaseClassを継承したDeviceClassの定義
   constructor: ->
     console.log "constructor of DeviceClass"
@@ -106,7 +107,7 @@ class ns.DeviceClass extends BaseClass
     @peer.on 'call', (mediaConnection) =>
       console.log "peer.on 'call'"
       mediaConnection.answer @ls
-      @__connect mediaConnection, video, connecting, waiting
+      @connect mediaConnection, video, connecting, waiting
 
   onConnection: (messageHandler = null, imageHandler = null)->
     console.log "onConnection"
@@ -140,6 +141,7 @@ class ns.DeviceClass extends BaseClass
       dataConnection.on 'close', =>
         # DataConnectionの接続が切断された際の処理
         console.log "dataConnection.on 'close'"
+        @edc.close() if @edc?
 
   __eventHandler: (event) ->
     # イベント受信時の処理
@@ -157,7 +159,7 @@ class ns.DeviceClass extends BaseClass
         # 上記以外のイベントを受信した場合は何もしない
         console.log "event: unknown"
 
-class ns.MonitorClass extends BaseClass
+class MonitorClass extends BaseClass
   # BaseClassを継承したMonitorClassの定義
   constructor: ->
     console.log "constructor of MonitorClass"
@@ -169,7 +171,7 @@ class ns.MonitorClass extends BaseClass
    
     # MediaConnectionの接続要求処理
     mediaConnection = @peer.call callto, @ls
-    @__connect mediaConnection, video, connecting, waiting
+    @connect mediaConnection, video, connecting, waiting
 
     # DataConnectionの接続要求処理
     dataConnection = @peer.connect callto, {reliable: true}
@@ -183,6 +185,7 @@ class ns.MonitorClass extends BaseClass
     dataConnection.on 'close', ->
       # DataConnectionが切断された際の処理
       console.log "dataConnection.on 'close'"
+      @edc.close if @edc?
 
   toggleMIC: ->
     # マイクON/OFFのイベント送信
@@ -216,3 +219,6 @@ class ns.MonitorClass extends BaseClass
       # 何らかの理由でDataConnectionが利用できない場合はエラー発生
       console.log "dataConnection is lost"
       @eh "dataConnection is lost" if @eh?
+
+this.ns.DeviceClass = DeviceClass
+this.ns.MonitorClass = MonitorClass
